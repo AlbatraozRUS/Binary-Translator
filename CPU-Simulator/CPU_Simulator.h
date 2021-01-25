@@ -2,18 +2,20 @@
 #include <fstream>
 #include <vector>
 
+#define CHECK_INST(name) inst.find(name) != std::string::npos
+    
+
 class Instruction {
-private:
-    std::string m_name;
+private:    
     int m_ID;
     
     int m_arg1;
     int m_arg2;
 
 public: 
-    Instruction(const std::string& name, const int ID, 
+    Instruction(const int ID, 
                 const int arg1 = -1, const int arg2 = -1) : 
-                    m_name(name), m_ID(ID), m_arg1(arg1), m_arg2(arg2) {}
+                    m_ID(ID), m_arg1(arg1), m_arg2(arg2) {}
                     
 };
 
@@ -22,7 +24,7 @@ enum REGISTERS {
     RBX,
     RCX,
     RDX,
-}
+};
 
 enum INSTRUCTIONS {
     PUSH,
@@ -47,6 +49,7 @@ enum INSTRUCTIONS {
     DEC,
 
     CMP,
+    CMP_R,
     JMP,
     JA,
     JEA,
@@ -54,6 +57,11 @@ enum INSTRUCTIONS {
     JBE,
     JE,
     JNE
-}
+};
 
-void ReadFromFile(char *pathToFile, std::vector<std::string> &instructions);
+void ReadFromFile(char *pathToFile, std::vector<std::string> &instructionsText);
+
+void ParseInstructions(const std::vector<std::string> &instructionsText,
+                             std::vector<Instruction> &instructions);
+
+int WhichReg(const std::string& instructionText);
