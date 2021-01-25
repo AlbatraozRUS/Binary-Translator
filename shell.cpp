@@ -1,9 +1,6 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <unistd.h>
 
 void ReadFromInput(char* pathToFile, std::string& inputText, bool isFile);
 
