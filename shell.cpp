@@ -1,8 +1,11 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
 
-void ReadFromFile(char *pathToFile, std::string &inputText, bool isFileInput);
+void ReadFromInput(char* pathToFile, std::string& inputText, bool isFile);
 
 int main(int argc, char **argv)
 {
@@ -14,9 +17,9 @@ int main(int argc, char **argv)
     std::string inputText;
 
     switch(argv[1][1]){
-        case 'f': {ReadFromFile(argv[2], inputText, true); break;}
+        case 'f': {ReadFromInput(argv[2], inputText, true); break;}
 
-        case 'i': {ReadFromFile(nullptr, inputText, false); break;}
+        case 'i': {ReadFromInput(nullptr, inputText, false); break;}
 
         default:  {std::cerr << "Error: Incorrect argument\n"; abort();}
     }
@@ -24,9 +27,9 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void ReadFromFile(char* pathToFile, std::string& inputText, bool isFileInput)
+void ReadFromInput(char* pathToFile, std::string& inputText, bool isFile)
 {            
-    if (isFileInput){    
+    if (isFile){    
         std::ifstream inputFile(pathToFile);
 
         if (!inputFile){
@@ -39,8 +42,6 @@ void ReadFromFile(char* pathToFile, std::string& inputText, bool isFileInput)
 
         inputFile.close();        
     }
-    else {
-        while (getline(std::cin, inputText)){}    
-        std::cout << inputText;    
-    }
+    else
+        while (getline(std::cin, inputText, '\0')){}        
 }
