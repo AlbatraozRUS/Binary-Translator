@@ -26,8 +26,8 @@ int main(int argc, char **argv)
 
 void ReadFromInput(char* pathToFile, std::string& inputText, bool isFile)
 {            
-    if (isFile){    
-        std::ifstream inputFile(pathToFile);
+    if (isFile){
+        std::ifstream inputFile(pathToFile, std::ios_base::in | std::ios_base::binary);
 
         if (!inputFile){
             std::cerr << "Error: Incorrect path to input file!\n";
