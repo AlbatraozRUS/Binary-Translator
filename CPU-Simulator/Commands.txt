@@ -4,8 +4,8 @@
 ///////////////////////////
 
 PUSH <number>       # Push number to stack
-PUSH <reg>          # From register to stack
-POP <reg>           # Pops from stack and mov it to register
+PUSH_R <reg>        # From register to stack
+POP_R <reg>         # Pops from stack and mov it to register
 MOV <reg1>, <reg2>  # Mov value from reg1 to reg2
 CALL <label>        # Call function with appropriate label
 RET                 # Returns from function
@@ -13,11 +13,17 @@ EXIT                # End of programm
 WRITE <reg>         # Writes to stdout value from register
 READ <reg>          # Reads and places value from stdin to register
 
-# add/sub/mul/div  to register1 number or register2
-ADD <reg1>, <reg2> / <number>
-SUB <reg1>, <reg2> / <number>
-DIV <reg1>, <reg2> / <number>
-MUL <reg1>, <reg2> / <number>
+# add/sub/mul/div value in register1 from register2
+ADD_R <reg1>, <reg2>
+SUB_R <reg1>, <reg2>
+DIV_R <reg1>, <reg2>
+MUL_R <reg1>, <reg2>
+
+# add/sub/mul/div value in register1 with number
+ADD <reg>, <number>
+SUB <reg>, <number>
+MUL <reg>, <number>
+DIV <reg>, <number>
 
 INC <reg>   # Adds 1 to register
 DEC <reg>   # Subs 1 from register
