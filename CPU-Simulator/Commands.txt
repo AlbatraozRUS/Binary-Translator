@@ -1,0 +1,37 @@
+///////////////////////////
+//   List of available   //
+//        commands       //
+///////////////////////////
+
+PUSH <number>       # Push number to stack
+PUSH <reg>          # From register to stack
+POP <reg>           # Pops from stack and mov it to register
+MOV <reg1>, <reg2>  # Mov value from reg1 to reg2
+CALL <label>        # Call function with appropriate label
+RET                 # Returns from function
+EXIT                # End of programm
+WRITE <reg>         # Writes to stdout value from register
+READ <reg>          # Reads and places value from stdin to register
+
+# add/sub/mul/div  to register1 number or register2
+ADD <reg1>, <reg2> / <number>
+SUB <reg1>, <reg2> / <number>
+DIV <reg1>, <reg2> / <number>
+MUL <reg1>, <reg2> / <number>
+
+INC <reg>   # Adds 1 to register
+DEC <reg>   # Subs 1 from register
+
+JMP <label> # Moves PC to label (don`t depends from "CMP")
+
+# Compare register1 and register2 or number
+CMP <reg1>, <reg2> / <number>   
+
+# Move PC to label (depends from "CMP")
+JA  <label>
+JEA <label>
+JB  <label>
+JBE <label>
+JE  <label>
+JNE <label>
+
