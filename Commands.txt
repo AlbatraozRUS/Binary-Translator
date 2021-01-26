@@ -3,15 +3,16 @@
 //        commands       //
 ///////////////////////////
 
-PUSH <number>       # Push number to stack
-PUSH_R <reg>        # From register to stack
-POP_R <reg>         # Pops from stack and mov it to register
-MOV <reg1>, <reg2>  # Mov value from reg1 to reg2
-CALL <label>        # Call function with appropriate label
-RET                 # Returns from function
-EXIT                # End of programm
-WRITE <reg>         # Writes to stdout value from register
-READ <reg>          # Reads and places value from stdin to register
+PUSH <number>         # Push number to stack
+PUSH_R <reg>          # From register to stack
+POP_R <reg>           # Pops from stack and mov it to register
+MOV <reg1>, <reg2>    # Mov value from reg2 to reg1
+MOV <reg1>, <number>  # Mov number to reg2
+CALL <label>          # Call function with appropriate label
+RET                   # Returns from function
+EXIT                  # End of programm
+WRITE <reg>           # Writes to stdout value from register
+READ <reg>            # Reads and places value from stdin to register
 
 # add/sub/mul/div value in register1 from register2
 ADD_R <reg1>, <reg2>

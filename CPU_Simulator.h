@@ -6,11 +6,11 @@
 
 class Instruction {
 private:    
-    int m_Id;
-    int m_argType;
+    int m_Id      = -1;
+    int m_argType = -1;
     
-    int m_arg1;
-    int m_arg2;
+    int m_arg1 = 0;
+    int m_arg2 = 0;
 
     std::string m_label;
 
@@ -41,6 +41,7 @@ enum INSTRUCTIONS {
     PUSH_R,
     POP_R,
     MOV,
+    MOV_R,
     CALL,
     RET,
     EXIT,
