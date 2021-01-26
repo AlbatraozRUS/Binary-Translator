@@ -2,6 +2,5 @@
 *.json
 *DS_Store
 /CMake
-/CPU-Simulator/CMake
 /.idea
 /.vscode
