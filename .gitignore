@@ -1,4 +1,8 @@
 /build
 /CPU_Simulator.dSYM
 CPU_Simulator
+CPU-Simulator
 *.json
+/CMakeFiles
+*cmake*
+Makefile
