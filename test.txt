@@ -1,0 +1,6 @@
+PUSH 2
+POP_R rax
+SUB_R rax, rbx
+MUL rcx, 8
+JMP hello
+EXIT
