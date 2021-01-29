@@ -1,5 +1,7 @@
-#include <vector>
 #include <iostream>
+
+#include <vector>
+#include <map>
 
 #pragma once
 
@@ -80,7 +82,8 @@ enum ARGTYPES
 };
 
 void ParseInstructions(const std::vector<std::string> &instructionsText,
-                       std::vector<Instruction> &instructions);
+                             std::vector<Instruction> &instructions, 
+                             std::map<int, std::string>& labels);
 
 int WhichReg(const std::string &instructionText, const bool isFirstArg = true);
 
