@@ -1,76 +1,71 @@
 #include "Instruction_Parser.h"
 
-void ParseInstructions(const std::vector<std::string> &instructionsText,
-                       std::vector<Instruction> &instructions)
-{
-    int instId = -1;
-    int instArgType = -1;
+namespace {
+    int WhichReg(const std::string instructionText, const bool isFirstArg);
+};
 
+void Instruction::ParseInstruction(const std::string &instructionText)
+{
     #define INSTRUCTION(name, id, argtype)         \
     {                                              \
         if (inst.find(#name) != std::string::npos) \
         {                                          \
-            instId = id;                           \
-            instArgType = argtype;                 \
+            Id_ = id;                              \
+            argType_ = argtype;                    \
         }                                          \
     }
+        
+    #define INSTRUCTIONS
+    #include "Commands_DSL.txt"
 
-    for (auto &inst : instructionsText)
+    #undef INSTRUCTIONS
+
+    //TODO Change to exceptions
+    if (Id_ == -1)
     {
-        #define INSTRUCTIONS
-        #include "Commands_DSL.txt"
-
-        #undef INSTRUCTIONS
-
-        if (instId == -1)
-        {
-            std::cerr << "Error: Unidentified instruction {" << inst << "}\n";
-            exit(EXIT_FAILURE);
-        }
-
-        instructions.push_back(ParseArguments(instId, instArgType, inst));
-
-        int instId = -1;
-        int instArgType = -1;
+    std::cerr << "Error: Unidentified instruction {" << instructionText << "}\n";
+    exit(EXIT_FAILURE);
     }
-#undef INSTRUCTION
+
+    ParseArguments(instructionText);                
+
+    #undef INSTRUCTION
 }
 
-Instruction ParseArguments(const int id, const int argType, std::string instructionText)
+void Instruction::ParseArguments(const std::string& instructionText)
 {    
-    switch (argType)
+    switch (argType_)
     {
     case NOARG:
-        return {id, argType};
+        return;
 
     case LABEL:
-        return {id, argType, instructionText.substr(instructionText.find(" ") + 1)};
+        label_ = instructionText.substr(instructionText.find(" ") + 1);
+        return;
 
-    case NUMBER:
-    {
-        int number = 0;
-        sscanf(instructionText.c_str(), "%*s %d", &number);
-        return {id, argType, number};
-    }
+    case NUMBER:    
+        sscanf(instructionText.c_str(), "%*s %d", &arg1_);
+        return;
 
     case REG:
-        return {id, argType, WhichReg(instructionText)};
+        arg1_ = WhichReg(instructionText);
+        return;
 
     case REG_REG:
-        return {id, argType, WhichReg(instructionText), WhichReg(instructionText, false)};
+        arg1_ =  WhichReg(instructionText);
+        arg2_ =  WhichReg(instructionText, false);
+        return;
 
     case REG_NUMBER:
     {
-        int number = 0;
-        sscanf(instructionText.c_str(), "%*s %*s %d", &number);
-        return {id, argType, WhichReg(instructionText), number};
+        arg1_ = WhichReg(instructionText);
+        sscanf(instructionText.c_str(), "%*s %*s %d", &arg2_);
+        return;
     }
-    }
-
-    return {-1, -1};
+    }    
 }
 
-int WhichReg(const std::string &instructionText, const bool isFirstArg)
+int WhichReg(const std::string instructionText, const bool isFirstArg)
 {
     std::string registerText;
     if (isFirstArg)
@@ -90,11 +85,18 @@ int WhichReg(const std::string &instructionText, const bool isFirstArg)
     case 'c':
         return RCX;
     case 'd':
-        return RCX;
+        return RDX;
 
     default:
         std::cerr << "Error: Incorrect register {"
                   << registerText << "}\n";
         exit(EXIT_FAILURE);
     }
+}
+
+void Instruction::Dump()
+{    
+    std::cout << "Id [" << Id_ << "], ArgType [" << argType_ << "]\n" 
+              <<  "\tArg_1 [" << arg1_ << "] Arg_2 [" << arg2_ << "]\n"
+              << "\tlabel: {" << label_ << "}\n\n";   
 }

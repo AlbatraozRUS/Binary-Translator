@@ -5,27 +5,32 @@
 
 #pragma once
 
+
 class Instruction
 {
 private:
-    int m_Id = -1;
-    int m_argType = -1;
+    int Id_ = -1;
+    int argType_ = -1;
 
-    int m_arg1 = 0;
-    int m_arg2 = 0;
+    int arg1_ = 0;
+    int arg2_ = 0;
+    std::string label_;
 
-    std::string m_label;
+    void ParseArguments(const std::string& instructionText);    
 
-public:
+public :
     Instruction(const int id, const int argType,
-                const int arg1 = 0, const int arg2 = 0) : m_Id(id), m_argType(argType), m_arg1(arg1), m_arg2(arg2) {}
-
-    Instruction(const int id, const int argType, const std::string label) : m_Id(id), m_argType(argType), m_label(label) {}
-
-    void Dump()
+                const int arg1 = 0, const int arg2 = 0) :
+                 Id_(id), argType_(argType), arg1_(arg1), arg2_(arg2)
     {
-        std::cout << "Id [" << m_Id << "], ArgType [" << m_argType << "]\n\tArg_1 [" << m_arg1 << "] Arg_2 [" << m_arg2 << "]\n\tlabel: {" << m_label << "}\n\n";
     }
+
+    Instruction(const int id, const int argType, const std::string label) : 
+                Id_(id), argType_(argType), label_(label) {}
+
+    void Dump() const;
+
+    void ParseInstruction(const std::string &instructionText);
 };
 
 enum REGISTERS
@@ -80,11 +85,3 @@ enum ARGTYPES
     REG_REG,
     REG_NUMBER,
 };
-
-void ParseInstructions(const std::vector<std::string> &instructionsText,
-                             std::vector<Instruction> &instructions, 
-                             std::map<int, std::string>& labels);
-
-int WhichReg(const std::string &instructionText, const bool isFirstArg = true);
-
-Instruction ParseArguments(const int id, const int argType, std::string instructionText);
