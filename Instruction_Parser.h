@@ -18,19 +18,18 @@ private:
 
     void ParseArguments(const std::string& instructionText);    
 
-public :
-    Instruction(const int id, const int argType,
-                const int arg1 = 0, const int arg2 = 0) :
-                 Id_(id), argType_(argType), arg1_(arg1), arg2_(arg2)
-    {
-    }
+public:
 
-    Instruction(const int id, const int argType, const std::string label) : 
-                Id_(id), argType_(argType), label_(label) {}
+    Instruction()  = default;
+
+    ~Instruction() = default;
 
     void Dump() const;
 
     void ParseInstruction(const std::string &instructionText);
+
+    std::string Convert2ByteCode
+                (const std::map<int, std::string> &labels, const int instPos) const;
 };
 
 enum REGISTERS
@@ -85,3 +84,8 @@ enum ARGTYPES
     REG_REG,
     REG_NUMBER,
 };
+
+const std::map<int, std::string> kRegisterList = {{RAX, "rax"}, 
+                                                  {RBX, "rbx"}, 
+                                                  {RCX, "rcx"}, 
+                                                  {RDX, "rdx"}};
