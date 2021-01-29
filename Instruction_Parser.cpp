@@ -23,8 +23,8 @@ void Instruction::ParseInstruction(const std::string &instructionText)
     //TODO Change to exceptions
     if (Id_ == -1)
     {
-    std::cerr << "Error: Unidentified instruction {" << instructionText << "}\n";
-    exit(EXIT_FAILURE);
+        std::cerr << "Error: Unidentified instruction {" << instructionText << "}\n";
+        exit(EXIT_FAILURE);
     }
 
     ParseArguments(instructionText);                
@@ -67,36 +67,24 @@ void Instruction::ParseArguments(const std::string& instructionText)
 
 int WhichReg(const std::string instructionText, const bool isFirstArg)
 {
-    std::string registerText;
-    if (isFirstArg)
-        registerText =
-            instructionText.substr(instructionText.find_first_of("r"));
-    else
-        registerText =
-            instructionText.substr(instructionText.find_last_of("r"));
+    std::string inputRegister;
+    sscanf(instructionText.c_str(), "%*s %[a-z 0-9]", inputRegister.c_str());
 
-    switch (registerText[1])
-    {
+    const std::map<int, std::string> kRegisterList = {{RAX, "rax"}, {RBX, "rbx"},
+                                                      {RCX, "rcx"}, {RDX, "rdx"}};
 
-    case 'a':
-        return RAX;
-    case 'b':
-        return RBX;
-    case 'c':
-        return RCX;
-    case 'd':
-        return RDX;
+    for (auto kRegister : kRegisterList)
+        if (inputRegister == kRegister.second)
+            return kRegister.first;
 
-    default:
-        std::cerr << "Error: Incorrect register {"
-                  << registerText << "}\n";
-        exit(EXIT_FAILURE);
-    }
+    //TODO Change to exceptions        
+    std::cerr << "Error: Unidentified register {" << inputRegister << "}\n";
+    exit(EXIT_FAILURE);   
 }
 
-void Instruction::Dump()
+void Instruction::Dump() const
 {    
-    std::cout << "Id [" << Id_ << "], ArgType [" << argType_ << "]\n" 
-              <<  "\tArg_1 [" << arg1_ << "] Arg_2 [" << arg2_ << "]\n"
+    std::cout <<   "Id ["     << Id_    << "], ArgType [" << argType_ << "]\n" 
+              << "\tArg_1 ["  << arg1_  << "] Arg_2 ["    << arg2_    << "]\n"
               << "\tlabel: {" << label_ << "}\n\n";   
 }
