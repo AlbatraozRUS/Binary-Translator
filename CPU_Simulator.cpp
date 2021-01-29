@@ -1,5 +1,28 @@
 #include "CPU_Simulator.h"
 
+namespace {
+void ConvertToByteCode(const std::vector<Instruction> &instructions,
+                        const std::map<int, std::string> &labels)
+{
+    FILE* outputFile = fopen("bytecode.txt", "wb");
+
+    if (outputFile == nullptr)
+    {
+        std::cerr << "Error: Incorrect path to output file!\n";
+        exit(EXIT_FAILURE);
+    }    
+
+    std::string output;
+
+    for (size_t nInst = 0; nInst < instructions.size(); nInst++)
+        output += instructions[nInst].Convert2ByteCode(labels, nInst);
+
+    fwrite(output.c_str(), 1, output.size(), outputFile);
+
+    fclose(outputFile);
+}
+};
+
 int main(int argc, char **argv)
 {
     // if (argc != 2)
@@ -13,13 +36,25 @@ int main(int argc, char **argv)
 
     std::vector<Instruction> instructions;
     std::map<int, std::string> labels;
-    ParseInstructions(instructionsText, instructions, labels);
+    for (const auto& instText : instructionsText)
+    {
+        if (instText[0] == ':')
+        {
+            labels.insert(make_pair(instructions.size() + 1, instText.substr(1)));
+        }
+        else {
+            Instruction inst;
+            inst.ParseInstruction(instText);
+            instructions.push_back(inst);
+        }
+    }
 
+    ConvertToByteCode(instructions, labels);
 
-    std::cerr << "\n#[Parser_Begin]\n";
-    for (auto& inst : instructions)
-        inst.Dump();
-    std::cerr << "\n#[Parser_End]\n";
+    // std::cerr << "\n#[Parser_Begin]\n";
+    // for (auto& inst : instructions)
+    //     inst.Dump();
+    // std::cerr << "\n#[Parser_End]\n";
 
     return 0;
 }
