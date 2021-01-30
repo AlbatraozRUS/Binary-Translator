@@ -1,8 +1,8 @@
 #include "Assembler.h"
 
-void Assembler::ReadFromFile(char *const pathToInputFile)
+void Assembler::ReadFromFile()
 {
-    std::ifstream inputFile(pathToInputFile, std::ios_base::in);
+    std::ifstream inputFile(pathToInputFile_, std::ios_base::in);
 
     if (!inputFile)
         throw std::runtime_error("Invalid path to file\n");
@@ -21,9 +21,9 @@ void Assembler::ReadFromFile(char *const pathToInputFile)
     inputFile.close();
 }
 
-void Assembler::Assemble(char *const pathToInputFile, char* const pathToOutputFile)
+void Assembler::Assemble()
 {    
-    ReadFromFile(pathToInputFile);
+    ReadFromFile();
     
     std::string label;
     OffsetLabel temp = {0, 0};
@@ -56,12 +56,12 @@ void Assembler::Assemble(char *const pathToInputFile, char* const pathToOutputFi
         }
     }
     
-    ConvertToByteCode(pathToOutputFile);    
+    ConvertToByteCode();    
 }
 
-void Assembler::ConvertToByteCode(char *const pathToOutputFile)
+void Assembler::ConvertToByteCode()
 {
-    FILE *outputFile = fopen(pathToOutputFile, "wb");
+    FILE *outputFile = fopen(pathToOutputFile_.c_str(), "wb");
 
     if (outputFile == nullptr)
         throw std::runtime_error("Can`t create output file");
@@ -110,4 +110,9 @@ void Assembler::Dump() const
     std::cerr << "#[Labels_End]\n";
 
     std::cerr << "\n-------------------------------------------------------------------------\n";
+}
+
+void Assembler::SetOutputFile(char* const pathToOutputFile)
+{
+    pathToOutputFile_ = pathToOutputFile;
 }

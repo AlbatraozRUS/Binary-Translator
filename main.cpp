@@ -8,16 +8,19 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    Assembler assembler;
+    Assembler assembler(argv[1]);    
+    if (argc == 3){        
+        assembler.SetOutputFile(argv[2]);
+    }
 
-    try {assembler.Assemble(argv[1]);}
+    try {assembler.Assemble();}
     catch (std::exception &exception)
     {
         std::cerr << exception.what() << "\n";
         exit(EXIT_FAILURE);
     }
 
-    assembler.Dump();
+    //assembler.Dump();
 
     return 0;
 }
