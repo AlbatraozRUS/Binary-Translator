@@ -5,7 +5,7 @@ void Assembler::ReadFromFile()
     std::ifstream inputFile(pathToInputFile_, std::ios_base::in);
 
     if (!inputFile)
-        throw std::runtime_error("Invalid path to file\n");
+        throw std::runtime_error("Assemler: Invalid path to file\n");
 
     std::string instructionText;
 
@@ -64,7 +64,7 @@ void Assembler::ConvertToByteCode()
     FILE *outputFile = fopen(pathToOutputFile_.c_str(), "wb");
 
     if (outputFile == nullptr)
-        throw std::runtime_error("Can`t create output file");
+        throw std::runtime_error("Assembler: Can`t create output file");
 
     std::string output;
     size_t offset = 0;
@@ -110,9 +110,4 @@ void Assembler::Dump() const
     std::cerr << "#[Labels_End]\n";
 
     std::cerr << "\n-------------------------------------------------------------------------\n";
-}
-
-void Assembler::SetOutputFile(char* const pathToOutputFile)
-{
-    pathToOutputFile_ = pathToOutputFile;
 }

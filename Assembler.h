@@ -6,7 +6,7 @@ class Assembler
 {
 private:
     std::string pathToInputFile_;
-    std::string pathToOutputFile_ = "bytecode.txt";
+    std::string pathToOutputFile_;
 
     std::vector<std::string> instructionsText_;
     std::vector<Instruction> instructions_;
@@ -15,16 +15,13 @@ private:
     void ReadFromFile();
     void ConvertToByteCode();
 
-public:
-    Assembler(const char* pathToInputFile) : pathToInputFile_(pathToInputFile) {}
+public:    
     Assembler(const char *pathToInputFile, const char *pathToOutputFile) : 
             pathToInputFile_(pathToInputFile) , pathToOutputFile_(pathToOutputFile) {}
 
     void Assemble();
 
-    void Dump() const;
-
-    void SetOutputFile(char *const pathToOutputFile);
+    void Dump() const;    
 
     ~Assembler() = default;
 };

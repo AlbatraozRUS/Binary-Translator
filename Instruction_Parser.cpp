@@ -13,7 +13,7 @@ int WhichReg(const std::string& instructionText, bool isFirstArg = true)
         if (inputRegister == kRegister.second)
             return kRegister.first;
         
-    throw std::runtime_error("Unidentified register: " + instructionText);
+    throw std::runtime_error("Assembler: Unidentified register: " + instructionText);
 }  
 };
 
@@ -34,7 +34,7 @@ void Instruction::ParseInstruction(const std::string &instructionText)
     #undef INSTRUCTIONS
     
     if (Id_ == -1)
-        throw std::runtime_error("Unidentified instruction" + instructionText);
+        throw std::runtime_error("Assembler: Unidentified instruction" + instructionText);
     
     ParseArguments(instructionText);                
     
