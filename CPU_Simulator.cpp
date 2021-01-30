@@ -2,7 +2,7 @@
 
 namespace {
 void ConvertToByteCode(const std::vector<Instruction> &instructions,
-                        const std::map<int, std::string> &labels)
+                       const std::map<int, std::string> &labels)
 {
     FILE* outputFile = fopen("bytecode.txt", "wb");
 

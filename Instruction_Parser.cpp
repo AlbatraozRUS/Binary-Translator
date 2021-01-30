@@ -18,7 +18,6 @@ int WhichReg(const std::string& instructionText, bool isFirstArg = true)
     exit(EXIT_FAILURE);
     }
 };
-//int WhichReg(const std::string &instructionText, const bool isFirstArg = true);
 
 void Instruction::ParseInstruction(const std::string &instructionText)
 {
@@ -123,9 +122,7 @@ std::string Instruction::Convert2ByteCode
         output += (labelPos - instPos);
 
         break;
-    }    
-
-    
+    }        
 
     return output;  
 }
