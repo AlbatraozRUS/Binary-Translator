@@ -6,5 +6,4 @@ CPU-Simulator
 /CMakeFiles
 *cmake*
 Makefile
-test.txt
 bytecode.txt

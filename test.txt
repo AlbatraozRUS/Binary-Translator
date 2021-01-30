@@ -1,0 +1,8 @@
+PUSH 5
+POP_R rax
+MOV rbx, rax
+JMP FINAL
+SUB rbx, 5
+:FINAL
+WRITE rbx
+EXIT
