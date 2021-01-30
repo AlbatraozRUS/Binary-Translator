@@ -42,14 +42,23 @@ void ConvertToByteCode(const std::vector<Instruction> &instructions,
 
 int main(int argc, char **argv)
 {
-    // if (argc != 2)
-    // {
-    //     std::cerr << "Error: Incorrect number of arguments\n";
-    //     exit(EXIT_FAILURE);
-    // }    
+    if (argc != 2)
+    {
+        std::cerr << "Error: Incorrect number of arguments\n";
+        exit(EXIT_FAILURE);
+    }    
 
     std::vector<std::string> instructionsText;
-    ReadFromFile("test.txt", instructionsText);     //temp path because it is easier to debug))
+    try
+    {
+        ReadFromFile(argv[2], instructionsText);
+    }
+
+    catch (std::exception& exception)
+    {
+        std::cerr << exception.what() + std::endl;
+        exit(EXIT_FAILURE);
+    }
 
     std::vector<Instruction> instructions;
     std::map<std::string, OffsetLabel> labels;
@@ -65,7 +74,15 @@ int main(int argc, char **argv)
         }
         else {
             Instruction inst;
+            try
+            {
             inst.ParseInstruction(instText);
+            }
+            catch (std::exception &exception)
+            {
+                std::cerr << exception.what();
+                exit(EXIT_FAILURE);
+            }
             if (!label.empty()) {
                 inst.SetLabeled(label);
                 label.erase();                
@@ -93,12 +110,9 @@ int main(int argc, char **argv)
 void ReadFromFile(char* pathToFile, std::vector<std::string>& instructionsText)
 {
     std::ifstream inputFile(pathToFile, std::ios_base::in);
-
+    
     if (!inputFile)
-    {
-        std::cerr << "Error: Incorrect path to input file!\n";
-        exit(EXIT_FAILURE);
-    }
+        throw std::runtime_error("Invalid path to file\n");    
 
     std::string instructionText;
 

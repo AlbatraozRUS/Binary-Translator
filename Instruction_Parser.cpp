@@ -12,11 +12,9 @@ int WhichReg(const std::string& instructionText, bool isFirstArg = true)
     for (auto kRegister : kRegisterList)
         if (inputRegister == kRegister.second)
             return kRegister.first;
-
-    //TODO Change to exceptions
-    std::cerr << "Error: Unidentified register {" << inputRegister << "}\n";
-    exit(EXIT_FAILURE);
-    }
+        
+    throw std::runtime_error("Unidentified register: " + instructionText);
+}  
 };
 
 void Instruction::ParseInstruction(const std::string &instructionText)
@@ -34,16 +32,12 @@ void Instruction::ParseInstruction(const std::string &instructionText)
     #include "Commands_DSL.txt"
 
     #undef INSTRUCTIONS
-
-    //TODO Change to exceptions
+    
     if (Id_ == -1)
-    {
-        std::cerr << "Error: Unidentified instruction {" << instructionText << "}\n";
-        exit(EXIT_FAILURE);
-    }
-
+        throw std::runtime_error("Unidentified instruction" + instructionText);
+    
     ParseArguments(instructionText);                
-
+    
     #undef INSTRUCTION
 }
 
@@ -52,30 +46,30 @@ void Instruction::ParseArguments(const std::string& instructionText)
     switch (argType_)
     {
     case NOARG:
-        return;
+        break;
 
     case LABEL:
         label_ = instructionText.substr(instructionText.find(" ") + 1);
-        return;
+        break;
 
     case NUMBER:    
         sscanf(instructionText.c_str(), "%*s %d", &arg1_);
-        return;
+        break;
 
     case REG:
         arg1_ = WhichReg(instructionText);
-        return;
+        break;
 
     case REG_REG:
         arg1_ =  WhichReg(instructionText);
         arg2_ =  WhichReg(instructionText, false);
-        return;
+        break;
 
     case REG_NUMBER:
     {
         arg1_ = WhichReg(instructionText);
         sscanf(instructionText.c_str(), "%*s %*s %d", &arg2_);
-        return;
+        break;
     }
     }    
 }
