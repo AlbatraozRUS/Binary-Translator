@@ -2,7 +2,7 @@
 
 namespace {
 void ConvertToByteCode(const std::vector<Instruction> &instructions,
-                       const std::map<int, std::string> &labels)
+                             std::map<std::string, OffsetLabel> &labels)
 {
     FILE* outputFile = fopen("bytecode.txt", "wb");
 
@@ -13,9 +13,26 @@ void ConvertToByteCode(const std::vector<Instruction> &instructions,
     }    
 
     std::string output;
+    size_t offset = 0;
 
-    for (size_t nInst = 0; nInst < instructions.size(); nInst++)
-        output += instructions[nInst].Convert2ByteCode(labels, nInst);
+    for (size_t nInst = 0; nInst < instructions.size(); nInst++){
+        offset = output.size();
+        
+        if (!instructions[nInst].GetLabeled().empty())            
+            labels.at(instructions[nInst].GetLabeled()).to = offset + 1;
+
+        output += instructions[nInst].Convert2ByteCode(labels, offset);
+        
+    }
+
+    for (const auto& inst : instructions)
+    {        
+        if (inst.GetArgType() == LABEL)
+        {
+            OffsetLabel offsetLabel = labels.at(inst.GetLabel());
+            output[offsetLabel.from] = offsetLabel.to - offsetLabel.from;
+        }
+    }
 
     fwrite(output.c_str(), 1, output.size(), outputFile);
 
@@ -35,26 +52,40 @@ int main(int argc, char **argv)
     ReadFromFile("test.txt", instructionsText);     //temp path because it is easier to debug))
 
     std::vector<Instruction> instructions;
-    std::map<int, std::string> labels;
+    std::map<std::string, OffsetLabel> labels;
+    std::string label;
+    OffsetLabel temp = {0, 0};
+
     for (const auto& instText : instructionsText)
     {
         if (instText[0] == ':')
         {
-            labels.insert(make_pair(instructions.size() + 1, instText.substr(1)));
+            label = instText.substr(1);
+            labels.insert(make_pair(label, temp));            
         }
         else {
             Instruction inst;
             inst.ParseInstruction(instText);
+            if (!label.empty()) {
+                inst.SetLabeled(label);
+                label.erase();                
+            }
             instructions.push_back(inst);
         }
     }
-
+        
     ConvertToByteCode(instructions, labels);
 
-    // std::cerr << "\n#[Parser_Begin]\n";
-    // for (auto& inst : instructions)
-    //     inst.Dump();
-    // std::cerr << "\n#[Parser_End]\n";
+    std::cerr << "\n#[Parser_Begin]\n";
+    for (const auto& inst : instructions)
+        inst.Dump();
+    std::cerr << "\n#[Parser_End]\n";
+
+    std::cerr << "\n#[Labels_Begin]\n";
+    for (const auto& label : labels)    
+        std::cerr << "Label {" << label.first << "}\n"
+        "\tFrom - " << label.second.from << ", to - " << label.second.to << "\n";    
+    std::cerr << "\n#[Labels_End]\n";
 
     return 0;
 }

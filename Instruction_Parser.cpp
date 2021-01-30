@@ -88,7 +88,7 @@ void Instruction::Dump() const
 }
 
 std::string Instruction::Convert2ByteCode
-        (const std::map<int, std::string>& labels, const int instPos) const
+        (std::map<std::string, OffsetLabel>& labels, const int offset) const
 {
     std::string output;
     output += Id_;
@@ -106,23 +106,31 @@ std::string Instruction::Convert2ByteCode
         output += arg1_;
         break;
 
-    //TODO Fix labels to work in bytes. Двупроходный обход или считать байты по ходу команды
     case LABEL:
-        int labelPos = -1;
-        for (const auto &label : labels)
-            if (label.second == label_)
-                labelPos = label.first;
-
-        if (labelPos == -1)
-        {
-            std::cerr << "Can`t find label {" << label_ << "}\n";
-            exit(EXIT_FAILURE);
-        }
-
-        output += (labelPos - instPos);
-
+        output += 1;
+        labels.at(label_).from = offset + 1;
         break;
     }        
 
     return output;  
+}
+
+int Instruction::GetArgType() const 
+{
+    return argType_;
+}
+
+std::string Instruction::GetLabel() const
+{
+    return label_;
+}
+
+std::string Instruction::GetLabeled() const
+{
+    return labeled_;
+}
+
+void Instruction::SetLabeled(const std::string& labeled)
+{
+    labeled_ = labeled;
 }

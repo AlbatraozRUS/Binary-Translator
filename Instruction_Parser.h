@@ -5,6 +5,11 @@
 
 #pragma once
 
+struct OffsetLabel
+{
+    size_t from;
+    size_t to;
+};
 
 class Instruction
 {
@@ -15,6 +20,7 @@ private:
     int arg1_ = 0;
     int arg2_ = 0;
     std::string label_;
+    std::string labeled_;
 
     void ParseArguments(const std::string& instructionText);    
 
@@ -29,11 +35,18 @@ public:
     void ParseInstruction(const std::string &instructionText);
 
     std::string Convert2ByteCode
-                (const std::map<int, std::string> &labels, const int instPos) const;
+            (std::map<std::string, OffsetLabel> &labels, const int offset) const;
+
+    int GetArgType() const;
+
+    std::string GetLabel() const;
+
+    std::string GetLabeled() const;
+
+    void SetLabeled(const std::string& labeled);
 };
 
-enum REGISTERS
-{
+enum REGISTERS {
     RAX,
     RBX,
     RCX,
