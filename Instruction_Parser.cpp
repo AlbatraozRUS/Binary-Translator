@@ -74,13 +74,6 @@ void Instruction::ParseArguments(const std::string& instructionText)
     }    
 }
 
-void Instruction::Dump() const
-{    
-    std::cout <<   "Id ["     << Id_    << "], ArgType [" << argType_ << "]\n" 
-              << "\tArg_1 ["  << arg1_  << "] Arg_2 ["    << arg2_    << "]\n"
-              << "\tlabel: {" << label_ << "}\n\n";   
-}
-
 std::string Instruction::Convert2ByteCode
         (std::map<std::string, OffsetLabel>& labels, const int offset) const
 {
@@ -107,6 +100,13 @@ std::string Instruction::Convert2ByteCode
     }        
 
     return output;  
+}
+
+void Instruction::Dump() const
+{
+    std::cout << "\tId [" << Id_ << "], ArgType [" << argType_ << "]\n"
+              << "\t\tArg_1 [" << arg1_ << "] Arg_2 [" << arg2_ << "]\n"
+              << "\t\tlabel: {" << label_ << "}\n\n";
 }
 
 int Instruction::GetArgType() const 
