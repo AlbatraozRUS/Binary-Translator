@@ -50,6 +50,7 @@ void CpuSimulator::Dump() const
     fprintf(stderr, "ID: %d, PC: %zu\n\t Arg_1: %d, Arg_2: %d\n",
         bytecode_[PC], PC, bytecode_[PC + 1], bytecode_[PC + 2]);
 
+    //TODO Changes numbers to RAX...
     fprintf(stderr, "Registers: RAX - %d, RBX - %d, RCX - %d, RDX - %d\n\n",
-        registers_[RAX], registers_[RBX], registers_[RCX], registers_[RDX]);
+        registers_[0], registers_[1], registers_[2], registers_[3]);
 }

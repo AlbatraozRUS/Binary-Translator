@@ -1,5 +1,12 @@
 #include "Assembler.h"
 
+#include <iostream>
+
+Assembler::Assembler(const char *pathToInputFile, const char *pathToOutputFile) :
+    pathToInputFile_(pathToInputFile), pathToOutputFile_(pathToOutputFile) {}
+
+Assembler::~Assembler() = default;
+
 void Assembler::ReadFromFile()
 {
     std::ifstream inputFile(pathToInputFile_, std::ios_base::in);
@@ -51,7 +58,7 @@ void Assembler::Assemble()
                 inst.SetLabeled(label);
                 label.erase();
             }
-            instructions_.push_back(inst);
+            instructions_.push_back(std::move(inst));
         }
     }
     
@@ -75,12 +82,13 @@ void Assembler::ConvertToByteCode()
         if (!inst.GetLabeled().empty())
             labels_.at(inst.GetLabeled()).to = offset + 1;
 
-        output += inst.Convert2ByteCode(labels_, offset);
+        output += inst.ConvertToByteCode(labels_, offset);
     }
 
     for (const auto &inst : instructions_)
     {
-        if (inst.GetArgType() == LABEL)
+        // TODO Label instead number 1
+        if (inst.GetArgType() == 1)
         {
             OffsetLabel offsetLabel = labels_.at(inst.GetLabel());
             output[offsetLabel.from] = offsetLabel.to - offsetLabel.from;

@@ -1,6 +1,9 @@
 #include <fstream>
+#include <vector>
 
-#include "Instruction_Parser.h"
+#include "Instruction.h"
+
+using namespace CPU_Simulator;
 
 class Assembler 
 {
@@ -16,12 +19,11 @@ private:
     void ConvertToByteCode();
 
 public:    
-    Assembler(const char *pathToInputFile, const char *pathToOutputFile) : 
-            pathToInputFile_(pathToInputFile) , pathToOutputFile_(pathToOutputFile) {}
+    Assembler(const char *pathToInputFile, const char *pathToOutputFile);
 
     void Assemble();
 
-    void Dump() const;    
+    void Dump() const;
 
-    ~Assembler() = default;
+    ~Assembler();
 };

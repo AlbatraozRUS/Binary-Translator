@@ -1,6 +1,8 @@
 #include <stack>
 #include <array>
 
+#include <iostream>
+
 class CpuSimulator {
 private:
     int registers_[4] = {0};
