@@ -1,24 +1,26 @@
 #include "Simulator.h"
+#include "Assembler.h"
 
 void CpuSimulator::Run(char* const pathToInputFile)
 {
     ReadBytecode(pathToInputFile);
 
-    #define INSTRUCTION(name, num, argType, code){  \
-        case num: {code; break;}                    \
-    }
+    #define INSTRUCTION(name, num, argType, code)  \
+        case num: /*Dump();*/ code break;              \
+    
 
     #define INSTRUCTIONS
     while(true)
-        switch(bytecode_[PC]){        
+        switch(bytecode_[PC]){                        
             #include "Commands_DSL.txt"
-            default: throw std::runtime_error("Simulator: Unidentified instruction" + bytecode_[PC]);
+            default:
+                throw std::runtime_error
+                    ("Simulator: Unidentified instruction" + std::to_string(bytecode_[PC]));
         }
 
     #undef INSTRUCTIONS
     #undef INSTRUCTION    
 }
-
 
 void CpuSimulator::ReadBytecode (char* const pathToInputFile)
 {
@@ -41,4 +43,13 @@ void CpuSimulator::ReadBytecode (char* const pathToInputFile)
 void CpuSimulator::AllocByteCodeBuf(size_t size)
 {
     bytecode_ = new char[size];
+}
+
+void CpuSimulator::Dump() const
+{
+    fprintf(stderr, "ID: %d, PC: %zu\n\t Arg_1: %d, Arg_2: %d\n",
+        bytecode_[PC], PC, bytecode_[PC + 1], bytecode_[PC + 2]);
+
+    fprintf(stderr, "Registers: RAX - %d, RBX - %d, RCX - %d, RDX - %d\n\n",
+        registers_[RAX], registers_[RBX], registers_[RCX], registers_[RDX]);
 }

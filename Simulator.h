@@ -5,6 +5,8 @@ class CpuSimulator {
 private:
     int registers_[4] = {0};
     std::stack<int> stack_;
+    std::stack<int> callerStack_;
+    bool isFlag = false;
 
     size_t PC = 0;
 
@@ -23,4 +25,6 @@ public:
     }
 
     void Run(char *const pathToInputFile);
+
+    void Dump() const;
 };
