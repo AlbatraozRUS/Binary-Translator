@@ -20,7 +20,7 @@ int main(int argc, char **argv)
         std::cerr << exception.what() << "\n";
         exit(EXIT_FAILURE);
     }
-    //assembler.Dump();
+    //assembler.Dump()
 
     CpuSimulator cpuSimulator;
 

@@ -6,15 +6,6 @@ using namespace CPU_Simulator;
 
 namespace
 {
-
-    enum REGISTERS
-    {
-        RAX,
-        RBX,
-        RCX,
-        RDX,
-    };
-
     const std::map<int, std::string> kRegisterList = {{RAX, "rax"},
                                                       {RBX, "rbx"},
                                                       {RCX, "rcx"},
@@ -32,20 +23,13 @@ namespace
             if (inputRegister == kRegister.second)
                 return kRegister.first;
 
-        throw std::runtime_error("Unidentified register " + instructionText);
+        throw std::runtime_error("Assembler: Unidentified register " + instructionText);
     }
 
 }; // namespace
 
 class Instruction::Impl
 {
-public:
-    Impl() = default;
-
-    void ParseArguments(const std::string &instructionText);
-
-    friend class Instruction;
-
 private:
     int Id_ = -1;
     int argType_ = -1;
@@ -54,51 +38,18 @@ private:
     int arg2_ = 0;
     std::string label_;
     std::string labeled_;
+    
+    //TODO
+    //ARGTYPES argtypes;
 
-    enum Id_Instructions
-    {
-        PUSH = 0x68,
-        PUSH_R = 0x50,
-        POP_R = 0x58,
-        MOV = 0xB8,
-        MOV_R = 0xBB,
-        CALL = 0xE8,
-        RET = 0xC3,
-        EXIT = 0xFF,
-        WRITE = 0xE6,
-        READ = 0xE4,
+public:
+    Impl() = default;
 
-        ADD_R = 0x03,
-        SUB_R = 0x2B,
-        IMUL_R = 0xAF,
-        IDIV_R = 0xF7,
-        ADD = 0x01,
-        SUB = 0x29,
-        IMUL = 0x6B,
-        IDIV = 0xF6,
-        INC = 0x40,
-        DEC = 0x48,
+    void ParseArguments(const std::string &instructionText);
 
-        CMP = 0x3B,
-        CMP_R = 0x39,
-        JMP = 0xE9,
-        JG = 0x8F,
-        JGE = 0x8D,
-        JL = 0x8C,
-        JLE = 0x8E,
-        JE = 0x75,
-        JNE = 0x85,
-    };
+    friend class Instruction;
 
-    enum ARGTYPES
-    {
-        NOARG,
-        LABEL,
-        NUMBER,
-        REG,
-        REG_REG,
-        REG_NUMBER,
-    };
+
 
 }; //class Instruction::Impl
 
@@ -160,7 +111,7 @@ void Instruction::ParseInstruction(const std::string &instructionText)
 #undef INSTRUCTIONS
     
     if (pImpl_->Id_ == -1)
-        throw std::runtime_error("Unidentified instruction" + instructionText);
+        throw std::runtime_error("Assembler: Unidentified instruction" + instructionText);
 
     pImpl_->ParseArguments(instructionText);
 
@@ -169,10 +120,10 @@ void Instruction::ParseInstruction(const std::string &instructionText)
 
 void Instruction::Dump() const
 {
-    std::cout << "Id [" << pImpl_->Id_ << "],"
+    std::cout << "Id [" << std::hex << pImpl_->Id_ << "],"
               << "ArgType [" << pImpl_->argType_ << "]\n"
-              << "\tArg_1 [" << pImpl_->arg1_ << "]"
-              << "Arg_2 [" << pImpl_->arg2_ << "]\n"
+              << "\tArg_1 [" << std::hex << pImpl_->arg1_ << "]"
+              << "Arg_2 [" << std::hex << pImpl_->arg2_ << "]\n"
               << "\tlabel: {" << pImpl_->label_ << "}\n\n";
 }
 
@@ -183,20 +134,20 @@ std::string Instruction::ConvertToByteCode(std::map<std::string, OffsetLabel> &l
 
     switch (pImpl_->argType_)
     {
-    case Instruction::Impl::NOARG:
+    case NOARG:
         break;
 
-    case Instruction::Impl::REG_NUMBER:
-    case Instruction::Impl::REG_REG:
+    case REG_NUMBER:
+    case REG_REG:
         output += pImpl_->arg2_;
-    case Instruction::Impl::NUMBER:
-    case Instruction::Impl::REG:
+    case NUMBER:
+    case REG:
         output += pImpl_->arg1_;
         break;
 
-    case Instruction::Impl::LABEL:
+    case LABEL:
         output += 1;
-        labels.at(pImpl_->label_).from = offset + 1;
+        labels.at(pImpl_->label_).froms.push_back(offset + 1);
         break;
     }
 
