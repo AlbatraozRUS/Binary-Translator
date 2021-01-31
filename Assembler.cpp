@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+
 Assembler::Assembler(const char *pathToInputFile, const char *pathToOutputFile) :
     pathToInputFile_(pathToInputFile), pathToOutputFile_(pathToOutputFile) {}
 
@@ -12,7 +13,7 @@ void Assembler::ReadFromFile()
     std::ifstream inputFile(pathToInputFile_, std::ios_base::in);
 
     if (!inputFile)
-        throw std::runtime_error("Assemler: Invalid path to file\n");
+        throw std::runtime_error("Assembler: Invalid path to file\n");
 
     std::string instructionText;
 
@@ -32,7 +33,7 @@ void Assembler::Assemble()
     ReadFromFile();
     
     std::string label;
-    OffsetLabel temp = {0, 0};
+    OffsetLabel temp;
 
     for (const auto &instText : instructionsText_)
     {
@@ -86,12 +87,15 @@ void Assembler::ConvertToByteCode()
     }
 
     for (const auto &inst : instructions_)
-    {
-        // TODO Label instead number 1
-        if (inst.GetArgType() == 1)
+    {     
+        if (inst.GetArgType() == LABEL)
         {
-            OffsetLabel offsetLabel = labels_.at(inst.GetLabel());
-            output[offsetLabel.from] = offsetLabel.to - offsetLabel.from;
+            OffsetLabel& offsetLabel = labels_.at(inst.GetLabel());
+            int offset = offsetLabel.to - offsetLabel.froms.front();
+            if (offset > 128 || offset < -128)
+                throw std::runtime_error("Assembler: too big jump");
+            output[offsetLabel.froms.front()] = offset;
+            offsetLabel.froms.pop_front();
         }
     }
 
@@ -112,8 +116,13 @@ void Assembler::Dump() const
 
     std::cerr << "\n#[Labels_Begin]\n";
     for (const auto& label : labels_)
+    {
         std::cerr << "\tLabel {" << label.first << "}\n"
-        "\t\tFrom - " << label.second.from << ", to - " << label.second.to << "\n";
+                  << "\t\tTo: " << label.second.to << "\n"
+                  << "\t\tFrom:\n";
+        for (const auto from : label.second.froms)
+            std::cerr << "\t\t" << from << "\n";
+    }
     std::cerr << "#[Labels_End]\n";
 
     std::cerr << "\n-------------------------------------------------------------------------\n";

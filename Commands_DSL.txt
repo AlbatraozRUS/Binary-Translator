@@ -13,102 +13,132 @@
 
 
 #ifdef INSTRUCTIONS
-INSTRUCTION(PUSH, 0, 2, 
+INSTRUCTION(push, PUSH, 2, 
     stack_.push(bytecode_[PC + 1]);
     PC += 2;)
-INSTRUCTION(PUSH_R, 1, 3,
+
+INSTRUCTION(push_r, PUSH_R, 3,
     stack_.push(registers_[bytecode_[PC + 1]]);
     PC += 2;)
-INSTRUCTION(POP_R, 2, 3,
+
+INSTRUCTION(pop_r, POP_R, 3,
     registers_[bytecode_[PC + 1]] = stack_.top();
     stack_.pop();
     PC += 2;)
-INSTRUCTION(MOV, 3, 5,
+
+INSTRUCTION(mov, MOV, 5,
     registers_[bytecode_[PC + 2]] = bytecode_[PC + 1];
     PC += 3;)
-INSTRUCTION(MOV_R, 4, 4, 
+
+INSTRUCTION(mov_r, MOV_R, 4, 
     registers_[bytecode_[PC + 2]] = registers_[bytecode_[PC + 1]];
     PC += 3;)
-INSTRUCTION(CALL, 5, 1, 
+
+INSTRUCTION(call, CALL, 1, 
     callerStack_.push(PC + 2); 
     PC += bytecode_[PC + 1];)
-INSTRUCTION(RET, 6, 0, 
+
+INSTRUCTION(ret, RET, 0, 
     PC = callerStack_.top();
     callerStack_.pop();)
-INSTRUCTION(EXIT,   7, 0, 
+
+INSTRUCTION(exit, EXIT, 0, 
     return;)
-INSTRUCTION(WRITE, 8, 3, 
+
+INSTRUCTION(write, WRITE, 3, 
     std::cout << registers_[bytecode_[PC + 1]] << "\n";
     PC += 2;)
-INSTRUCTION(READ, 9, 3,
+
+INSTRUCTION(read, READ, 3,
      std::cin >> registers_[bytecode_[PC + 1]];
      PC += 2;)
 
-INSTRUCTION(ADD_R, 10, 4, 
-    registers_[bytecode_[PC + 2]] += registers_[bytecode_[PC + 1]];
-    PC += 3;)
-INSTRUCTION(SUB_R, 11, 4, 
-    registers_[bytecode_[PC + 2]] -= registers_[bytecode_[PC + 1]];
-    PC += 3;)
-INSTRUCTION(MUL_R, 12, 4, 
-    registers_[bytecode_[PC + 2]] *= registers_[bytecode_[PC + 1]];
-    PC += 3;)
-INSTRUCTION(DIV_R, 13, 4, 
-    registers_[bytecode_[PC + 2]] /= registers_[bytecode_[PC + 1]];
-    PC += 3;)
-INSTRUCTION(ADD, 14, 5, 
+
+
+INSTRUCTION(add, ADD, 5, 
     registers_[bytecode_[PC + 2]] += bytecode_[PC + 1];
     PC += 3;)
-INSTRUCTION(SUB, 15, 5, 
+
+INSTRUCTION(sub, SUB, 5, 
     registers_[bytecode_[PC + 2]] -= bytecode_[PC + 1];
     PC += 3;)
-INSTRUCTION(MUL, 16, 5, 
+
+INSTRUCTION(imul, IMUL, 5, 
     registers_[bytecode_[PC + 2]] *= bytecode_[PC + 1];
     PC += 3;)
-INSTRUCTION(DIV, 17, 5, 
+
+INSTRUCTION(idiv, IDIV, 5, 
     registers_[bytecode_[PC + 2]] /= bytecode_[PC + 1];
     PC += 3;)
-INSTRUCTION(INC, 18, 3, 
+
+INSTRUCTION(add_r, ADD_R, 4, 
+    registers_[bytecode_[PC + 2]] += registers_[bytecode_[PC + 1]];
+    PC += 3;)
+
+INSTRUCTION(sub_r, SUB_R, 4, 
+    registers_[bytecode_[PC + 2]] -= registers_[bytecode_[PC + 1]];
+    PC += 3;)
+
+INSTRUCTION(imul_r, IMUL_R, 4, 
+    registers_[bytecode_[PC + 2]] *= registers_[bytecode_[PC + 1]];
+    PC += 3;)
+
+INSTRUCTION(idiv_r, IDIV_R, 4, 
+    registers_[bytecode_[PC + 2]] /= registers_[bytecode_[PC + 1]];
+    PC += 3;)
+
+INSTRUCTION(inc, INC, 3, 
     registers_[bytecode_[PC + 1]]++;
     PC += 2;)
-INSTRUCTION(DEC, 19, 3, 
+
+INSTRUCTION(dec, DEC, 3, 
     registers_[bytecode_[PC + 1]]--;
     PC += 2;)
 
-INSTRUCTION(CMP, 20, 5, 
-    isFlag = registers_[bytecode_[PC + 2]] - registers_[bytecode_[PC + 1]];
-    PC += 3;)
-INSTRUCTION(CMP_R, 21, 4, 
+
+
+INSTRUCTION(cmp, CMP, 5, 
     isFlag = registers_[bytecode_[PC + 2]] - bytecode_[PC + 1];
     PC += 3;)
-INSTRUCTION(JMP, 22, 1, 
+
+INSTRUCTION(cmp_r, CMP_R, 4, 
+    isFlag = registers_[bytecode_[PC + 2]] - registers_[bytecode_[PC + 1]];
+    PC += 3;)
+
+INSTRUCTION(jmp, JMP, 1, 
     PC += bytecode_[PC + 1];)
-INSTRUCTION(JA, 23, 1, 
+
+INSTRUCTION(jg, JG, 1, 
     if (isFlag > 0) 
         PC += bytecode_[PC + 1];
     else 
         PC += 2;)
-INSTRUCTION(JAE, 24, 1, 
+
+INSTRUCTION(jge, JGE, 1, 
     if (isFlag >= 0) 
         PC += bytecode_[PC + 1];
     else
         PC += 2;)
-INSTRUCTION(JB, 25, 1, 
+
+INSTRUCTION(jl, JL, 1, 
     if (isFlag < 0) 
         PC += bytecode_[PC + 1];
     else
         PC += 2;)
-INSTRUCTION(JBE, 26, 1, 
+
+INSTRUCTION(jle, JLE, 1, 
     if (isFlag <= 0) 
         PC += bytecode_[PC + 1];
     else    
         PC += 2;)
-INSTRUCTION(JE, 27, 1, 
+
+INSTRUCTION(je, JE, 1, 
     if (isFlag == 0) 
         PC += bytecode_[PC + 1];
     else
         PC += 2;)
-INSTRUCTION(JNE, 28, 1, 
+
+INSTRUCTION(jne, JNE, 1, 
     if (isFlag != 0) 
         PC += bytecode_[PC + 1];
     else

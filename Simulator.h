@@ -8,7 +8,7 @@ private:
     int registers_[4] = {0};
     std::stack<int> stack_;
     std::stack<int> callerStack_;
-    bool isFlag = false;
+    int isFlag = 0;
 
     size_t PC = 0;
 
