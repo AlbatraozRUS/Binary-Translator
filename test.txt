@@ -1,8 +1,8 @@
-PUSH 5
+PUSH 1
 POP_R rax
-MOV rbx, rax
-JMP FINAL
-SUB rbx, 5
-:FINAL
-WRITE rbx
+CALL NEXT
+WRITE rax
 EXIT
+:NEXT
+INC rax
+RET

@@ -19,7 +19,7 @@ int WhichReg(const std::string& instructionText, bool isFirstArg = true)
 
 void Instruction::ParseInstruction(const std::string &instructionText)
 {
-    #define INSTRUCTION(name, id, argtype)         \
+    #define INSTRUCTION(name, id, argtype, code)   \
     {                                              \
         if (instructionText.find(#name) != std::string::npos) \
         {                                          \

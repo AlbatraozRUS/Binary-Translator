@@ -81,7 +81,7 @@ enum INSTRUCTIONS
     CMP_R,
     JMP,
     JA,
-    JEA,
+    JAE,
     JB,
     JBE,
     JE,

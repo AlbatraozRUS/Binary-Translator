@@ -10,10 +10,9 @@ void Assembler::ReadFromFile()
     std::string instructionText;
 
     while (getline(inputFile, instructionText, '\n'))
-    {
-        size_t posComment = instructionText.find_first_of("#");
-        if (posComment != std::string::npos)
-            instructionText.resize(posComment - 1);
+    {        
+        if (instructionText.find_first_of("#") != std::string::npos)
+            continue;
 
         instructionsText_.push_back(instructionText);
     }
