@@ -1,5 +1,5 @@
 #include "Simulator.h"
-#include "Assembler.h"
+#include "../Assembler/Assembler.h"
 
 void CpuSimulator::Run(char* const pathToInputFile)
 {
@@ -14,7 +14,7 @@ void CpuSimulator::Run(char* const pathToInputFile)
     #define INSTRUCTIONS
     while(true)
         switch((unsigned char)bytecode_[PC]){                        
-            #include "Commands_DSL.txt"            
+            #include "../Commands_DSL.txt"            
             default:
                 throw std::runtime_error
                     ("Simulator: Unidentified instruction " + std::to_string(bytecode_[PC]));

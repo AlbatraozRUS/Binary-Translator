@@ -106,7 +106,7 @@ void Instruction::ParseInstruction(const std::string &instructionText)
     }
 
 #define INSTRUCTIONS
-#include "Commands_DSL.txt"
+#include "../Commands_DSL.txt"
 
 #undef INSTRUCTIONS
     

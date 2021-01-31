@@ -1,8 +1,0 @@
-PUSH 1
-POP_R rax
-CALL NEXT
-WRITE rax
-EXIT
-:NEXT
-INC rax
-RET

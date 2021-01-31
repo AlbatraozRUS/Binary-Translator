@@ -1,5 +1,5 @@
-#include "Assembler.h"
-#include "Simulator.h"
+#include "Assembler/Assembler.h"
+#include "Simulator/Simulator.h"
 
 int main(int argc, char **argv)
 {
