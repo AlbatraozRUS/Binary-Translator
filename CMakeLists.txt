@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13.4)
 project(Binary-Translator)
 
+set(CMAKE_CXX_STANDARD 17)
+
 find_package(LLVM REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -15,7 +17,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 # Now build our tools
-add_executable(Binary-Translator shell.cpp)
+add_executable(Binary-Translator shell.cpp Translator.cpp Translator.h)
 
 # Find the libraries that correspond to the LLVM components
 # that we wish to use
