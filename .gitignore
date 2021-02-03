@@ -1,9 +1,11 @@
 /build
-/CPU_Simulator.dSYM
-CPU_Simulator
-CPU-Simulator
-*.json
+/Build
+
 /CMakeFiles
+/CPU_Simulator.dSYM
+
+CPU_Simulator
+*.json
 *cmake*
 Makefile
 bytecode.txt
