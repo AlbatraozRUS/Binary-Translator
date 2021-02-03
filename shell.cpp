@@ -1,8 +1,29 @@
-#include <fstream>
-#include <iostream>
-#include <cstdlib>
+#include "Translator.h"
 
-void ReadFromInput(char* pathToFile, std::string& inputText, bool isFile);
+// namespace {
+//     void ReadFromInput(char *pathToFile, std::string &inputText, bool isFile)
+//     {
+//         if (isFile)
+//         {
+//             std::ifstream inputFile(pathToFile, std::ios_base::in | std::ios_base::binary);
+
+//             if (!inputFile)
+//             {
+//                 std::cerr << "Error: Incorrect path to input file!\n";
+//                 exit(EXIT_FAILURE);
+//             }
+
+//             while (inputFile)
+//                 inputFile >> inputText;
+
+//             inputFile.close();
+//         }
+//         else
+//             while (getline(std::cin, inputText, '\0'))
+//             {
+//             }
+//     }
+// }
 
 int main(int argc, char **argv)
 {
@@ -11,34 +32,10 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    std::string inputText;
-
-    switch(argv[1][1]){
-        case 'f': {ReadFromInput(argv[2], inputText, true); break;}
-
-        case 'i': {ReadFromInput(nullptr, inputText, false); break;}
-
-        default:  {std::cerr << "Error: Incorrect argument\n"; abort();}
-    }
+    Translator translator(argv[1]);
+    translator.Translate();
+    translator.Dump();
 
     return 0;
 }
 
-void ReadFromInput(char* pathToFile, std::string& inputText, bool isFile)
-{            
-    if (isFile){
-        std::ifstream inputFile(pathToFile, std::ios_base::in | std::ios_base::binary);
-
-        if (!inputFile){
-            std::cerr << "Error: Incorrect path to input file!\n";
-            exit(EXIT_FAILURE);
-        }
-        
-        while (inputFile)
-            inputFile >> inputText;
-
-        inputFile.close();        
-    }
-    else
-        while (getline(std::cin, inputText, '\0')){}        
-}
