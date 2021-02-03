@@ -1,6 +1,10 @@
 /build
 *.json
 *DS_Store
-/CMake
 /.idea
 /.vscode
+/CMakeFiles
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+Binary-Translator
