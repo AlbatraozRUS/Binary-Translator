@@ -3,4 +3,10 @@ project(CPU-Simulator)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(CPU-Simulator main.cpp Assembler/Assembler.cpp Assembler/Assembler.h Assembler/Instruction.cpp Assembler/Instruction.h Simulator/Simulator.h Simulator/Simulator.cpp)
+include_directories(Assembler Simulator)
+
+add_executable(CPU_Simulator main.cpp)
+add_subdirectory(Assembler) 
+add_subdirectory(Simulator) 
+
+target_link_libraries(CPU_Simulator Assembler Simulator "-lm")
