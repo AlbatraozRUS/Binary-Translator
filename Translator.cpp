@@ -3,12 +3,13 @@
 #include <iostream>
 #include <fstream>
 #include <stack>
+#include <map>
 
 class Translator::Impl {
 private:
     std::string pathToInputFile_;
 
-    char* bytecode_ = nullptr;
+    unsigned char* bytecode_ = nullptr;
     size_t sizeByteCode_ = 0;
     size_t PC_ = 0;
     std::string output_;
@@ -16,6 +17,8 @@ private:
     llvm::LLVMContext context_;
     llvm::Module* module_ = nullptr;
     llvm::IRBuilder<>* builder_ = nullptr;
+
+    std::map<int, llvm::Value*> registers_;
     //std::stack<llvm::Value> stackIR_;
 
     void TranslateByteCode();
@@ -56,6 +59,9 @@ void Translator::Impl::Translate()
     llvm::BasicBlock *entryBB = llvm::BasicBlock::Create(context_, "entry", mainFunc);
 
     builder_->SetInsertPoint(entryBB);
+        
+    for (unsigned nReg = 0; nReg < 4; nReg++)
+        registers_.insert(std::make_pair(nReg, llvm::ConstantInt::get(builder_->getInt32Ty(), 0)));            
 
     TranslateByteCode();
 
@@ -78,7 +84,7 @@ void Translator::Impl::TranslateByteCode()
             case DEC:
                 TranslateByteCodeMath();
                 break;
-
+ 
             case JMP:
             case JG:
             case JGE:
@@ -118,14 +124,60 @@ void Translator::Impl::TranslateByteCode()
             case EXIT:
                 break;                                     
 
-            default: throw std::runtime_error
-                ("Unidefined instruction" + std::to_string(bytecode_[PC_]));
+            default: 
+            throw std::runtime_error("TranslateByteCode():Unidefined instruction"
+                                                 + std::to_string(bytecode_[PC_]));
         }
 }
 
 void Translator::Impl::TranslateByteCodeMath()
 {
+    llvm::Value* arg_1 = builder_->CreateLoad(registers_.at(bytecode_[PC_ + 1]));
 
+    llvm::Value *arg_2 = nullptr;
+    if (bytecode_[PC_] == ADD_R  || bytecode_[PC_] == SUB_R ||
+        bytecode_[PC_] == IMUL_R || bytecode_[PC_] == IDIV_R) 
+        arg_2 = builder_->CreateLoad(registers_.at(bytecode_[PC_ + 2]));
+    else 
+        arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), (char )bytecode_[PC_ + 2]);
+
+    llvm::Value* res = nullptr;
+    switch (bytecode_[PC_]){
+    case ADD:
+    case ADD_R:
+        res = builder_->CreateAdd(arg_1, arg_2);
+        break;    
+
+    case SUB:
+    case SUB_R:
+        res = builder_->CreateSub(arg_1, arg_2);
+        break;
+
+    case IMUL:
+    case IMUL_R:
+        res = builder_->CreateMul(arg_1, arg_2);                
+        break;
+
+    case IDIV:
+    case IDIV_R:
+        res = builder_->CreateSDiv(arg_1, arg_2);
+        break;
+    
+    case INC:
+        res = ConstantInt::get(builder_->getInt32Ty(), bytecode_[PC_ + 1] + 1);
+        break;
+
+    case DEC:
+        res = ConstantInt::get(builder_->getInt32Ty(), bytecode_[PC_ + 1] - 1);
+        break;
+
+    default:
+        throw std::runtime_error("TranslateByteCodeMath(): Unidefined instruction"
+                                    + std::to_string(bytecode_[PC_]));
+    }
+
+    registers_.at(bytecode_[PC_ + 1]) = res;
+    builder_->CreateLoad(res);
 }
 
 void Translator::Impl::TranslateByteCodeJumps()
@@ -184,7 +236,7 @@ void Translator::Impl::ReadBytecode()
 
 void Translator::Impl::AllocByteCodeBuf()
 {
-    bytecode_ = new char[sizeByteCode_];
+    bytecode_ = new unsigned char[sizeByteCode_];
 }
 
 void Translator::Translate()
