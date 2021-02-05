@@ -137,7 +137,10 @@ std::string Instruction::ConvertToByteCode
 
     case REG_NUMBER:
     case REG_REG:
+        output += pImpl_->arg1_;
         output += pImpl_->arg2_;
+        break;
+
     case NUMBER:
     case REG:
         output += pImpl_->arg1_;
