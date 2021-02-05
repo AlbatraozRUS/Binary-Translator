@@ -1,4 +1,5 @@
 /build
+/Build
 *.json
 *DS_Store
 /.idea
