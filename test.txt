@@ -1,0 +1,9 @@
+read rbx
+push_r rbx
+push 5
+pop_r rcx
+pop_r rdx
+add_r rcx, rdx
+write rcx
+mov_r rdx, rcx
+write rdx
