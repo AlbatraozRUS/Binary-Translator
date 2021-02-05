@@ -34,17 +34,17 @@ private:
     llvm::GlobalVariable *regs_ = nullptr;
     llvm::ArrayType *regsType_ = nullptr;
 
-    std::stack<llvm::ConstantInt *> stackIR_;
+    std::stack<llvm::Value *> stackIR_;
 
     void TranslateByteCode();
     void ReadBytecode();
     void AllocByteCodeBuf();
 
-    void TranslateByteCodeMath();
+    void TranslateByteCodeExpression();
     void TranslateByteCodeJumps();
     void TranslateByteCodeCmp();
     void TranslateByteCodeIO();
-    void TranslateByteCodeMem();
+    void TranslateByteCodeStack();
     void TranslateByteCodeCall();
     void TranslateByteCodeRet();
 
@@ -60,15 +60,17 @@ public:
 
     friend void Translator::Dump() const;
 
-}; //class Translator::Impl
+}; // class Translator::Impl
 
 void Translator::Impl::Translate()
 {
     ReadBytecode();
 
+    // Create basic
     module_ = new llvm::Module("top", context_);
     builder_ = new llvm::IRBuilder(context_);
 
+    // Create global array of registers
     regsType_ = llvm::ArrayType::get(builder_->getInt32Ty(), NREGS);
     module_->getOrInsertGlobal("regs_", regsType_);
     regs_ = module_->getNamedGlobal("regs_");
@@ -93,9 +95,8 @@ void Translator::Impl::Translate()
 
 void Translator::Impl::TranslateByteCode()
 {
-    while (PC_ < sizeByteCode_)
-        switch (bytecode_[PC_])
-        {
+    while (PC_ < sizeByteCode_) 
+        switch (bytecode_[PC_]) {
         case ADD_R:
         case ADD:
         case SUB_R:
@@ -106,7 +107,9 @@ void Translator::Impl::TranslateByteCode()
         case IDIV:
         case INC:
         case DEC:
-            TranslateByteCodeMath();
+        case MOV:
+        case MOV_R:
+            TranslateByteCodeExpression();
             break;
 
         case JMP:
@@ -132,9 +135,7 @@ void Translator::Impl::TranslateByteCode()
         case PUSH:
         case PUSH_R:
         case POP_R:
-        case MOV:
-        case MOV_R:
-            TranslateByteCodeMem();
+            TranslateByteCodeStack();
             break;
 
         case CALL:
@@ -153,25 +154,24 @@ void Translator::Impl::TranslateByteCode()
         }
 }
 
-void Translator::Impl::TranslateByteCodeMath()
+void Translator::Impl::TranslateByteCodeExpression()
 {
 
-    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 2]);
+    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
     llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
 
     llvm::Value *arg_2 = nullptr;
     if (IsRegRegInst(bytecode_[PC_]))
     {
         llvm::Value *pArg_2 = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
-                                                           bytecode_[PC_ + 1]);
+                                                           bytecode_[PC_ + 2]);
         arg_2 = builder_->CreateLoad(pArg_2);
     }
     else
-        arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), (char)bytecode_[PC_ + 1]);
+        arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), (char)bytecode_[PC_ + 2]);
 
     llvm::Value *res = nullptr;
-    switch (bytecode_[PC_])
-    {
+    switch (bytecode_[PC_]) {
     case ADD:
     case ADD_R:
         res = builder_->CreateAdd(arg_1, arg_2);
@@ -199,11 +199,16 @@ void Translator::Impl::TranslateByteCodeMath()
 
     case DEC:
         arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), 1);
-        res = builder_->CreateSub(arg_1, arg_2);
+        res = builder_->CreateSub(arg_1, arg_2); 
         break;
-
+    
+    case MOV:
+    case MOV_R:
+        res = arg_2;
+        break;
+       
     default:
-        throw std::runtime_error("TranslateByteCodeMath(): Unidefined instruction" + std::to_string(bytecode_[PC_]));
+        throw std::runtime_error("TranslateByteCodeExpression(): Unidefined instruction" + std::to_string(bytecode_[PC_]));
     }
 
     builder_->CreateStore(res, pArg_1);
@@ -229,7 +234,7 @@ void Translator::Impl::TranslateByteCodeIO()
 
     auto funcType = llvm::FunctionType::get(builder_->getInt32Ty(), funcArgsType, true);
     auto formatVal = builder_->CreateGlobalStringPtr("%d", "IOformat");
-
+    
     std::vector<llvm::Value *> args;
     args.push_back(formatVal);
     Value *pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
@@ -255,8 +260,37 @@ void Translator::Impl::TranslateByteCodeIO()
     PC_ += 2;
 }
 
-void Translator::Impl::TranslateByteCodeMem()
+void Translator::Impl::TranslateByteCodeStack()
 {
+    llvm::Value* pArg = nullptr;
+    llvm::Value* arg = nullptr;
+
+    // Todo check empty 
+    switch (bytecode_[PC_]) {
+    case PUSH:
+        arg = llvm::ConstantInt::get(builder_->getInt32Ty(), (char)bytecode_[PC_ + 1]);
+        stackIR_.push(arg);
+        break;
+
+    case PUSH_R:
+        pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
+        arg = builder_->CreateLoad(pArg);
+        stackIR_.push(arg);
+        break;
+    
+    case POP_R:
+        pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
+        arg = stackIR_.top();
+        builder_->CreateStore(arg, pArg);
+        stackIR_.pop();
+        break;
+
+    default:
+        throw std::runtime_error("TranslateByteCodeStack(): Unidefined instruction" 
+                                 + std::to_string(bytecode_[PC_]));
+    } 
+
+    PC_ += 2;
 }
 
 void Translator::Impl::TranslateByteCodeCall()

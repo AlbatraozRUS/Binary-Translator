@@ -75,6 +75,7 @@ enum Registers
     RBX,
     RCX,
     RDX,
+    NREGS,
 };
 
 #endif //BINARY_TRANSLATOR_TRANSLATOR_H
