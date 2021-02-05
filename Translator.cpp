@@ -223,10 +223,39 @@ void Translator::Impl::TranslateByteCodeExpression()
 
 void Translator::Impl::TranslateByteCodeJumps()
 {
+    PC_ += 2;
 }
 
 void Translator::Impl::TranslateByteCodeCmp()
-{
+{    
+    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
+    llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
+
+    llvm::Value *arg_2 = nullptr;
+    if (IsRegRegInst(bytecode_[PC_]))
+    {
+        llvm::Value *pArg_2 = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
+                                                           bytecode_[PC_ + 2]);
+        arg_2 = builder_->CreateLoad(pArg_2);
+    }
+    else
+        arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), (char)bytecode_[PC_ + 2]);
+    
+    llvm::CmpInst::Predicate predicate;
+    switch (bytecode_[PC_ + 3]) {
+        case JMP: predicate = llvm::CmpInst::Predicate::FCMP_TRUE; break;
+        case JG:  predicate = llvm::CmpInst::Predicate::ICMP_SGT;  break;
+        case JGE: predicate = llvm::CmpInst::Predicate::ICMP_SGE;  break;
+        case JL:  predicate = llvm::CmpInst::Predicate::ICMP_SLT;  break;
+        case JLE: predicate = llvm::CmpInst::Predicate::ICMP_SLE;  break;
+        case JE:  predicate = llvm::CmpInst::Predicate::ICMP_EQ;   break;
+        case JNE: predicate = llvm::CmpInst::Predicate::ICMP_NE;   break;
+        default: 
+            throw std::runtime_error("TranslateByteCodeCmp(): Jump instruction is not found");
+    }
+
+    builder_->CreateCmp(predicate, arg_1, arg_2, "resCmp");
+    PC_ += 3;
 }
 
 void Translator::Impl::TranslateByteCodeIO()
@@ -329,6 +358,7 @@ void Translator::Impl::TranslateByteCodeCall()
 
 void Translator::Impl::TranslateByteCodeRet()
 {
+    builder_->CreateRetVoid();
 }
 
 Translator::Translator(char *const pathToInputFile) : pImpl_(std::make_unique<Impl>(pathToInputFile)){};
