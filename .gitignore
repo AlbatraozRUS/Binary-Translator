@@ -9,3 +9,5 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 Binary-Translator
+temp.ll
+a.out
