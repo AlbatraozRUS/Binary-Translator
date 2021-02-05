@@ -9,9 +9,9 @@ namespace
 {
     bool IsRegRegInst(const int inst)
     {
-        if (inst == ADD_R || inst == SUB_R ||
+        if (inst == ADD_R  || inst == SUB_R  ||
             inst == IMUL_R || inst == IDIV_R ||
-            inst == CMP_R || inst == MOV_R)
+            inst == CMP_R  || inst == MOV_R)
             return true;
 
         return false;
@@ -82,7 +82,8 @@ void Translator::Impl::Translate()
     regs_->setInitializer(llvm::ConstantArray::get(regsType_, temp));
 
     llvm::FunctionType *funcType = llvm::FunctionType::get(builder_->getInt32Ty(), false);
-    llvm::Function *mainFunc = llvm::Function::Create(funcType, llvm::Function::ExternalLinkage, "main", module_);
+    llvm::Function *mainFunc = llvm::Function::Create
+                (funcType, llvm::Function::ExternalLinkage, "main", module_);
 
     llvm::BasicBlock *entryBB = llvm::BasicBlock::Create(context_, "entry", mainFunc);
 
@@ -150,7 +151,8 @@ void Translator::Impl::TranslateByteCode()
             break;
 
         default:
-            throw std::runtime_error("TranslateByteCode():Unidefined instruction" + std::to_string(bytecode_[PC_]));
+            throw std::runtime_error("TranslateByteCode():Unidefined instruction" +
+                                      std::to_string(bytecode_[PC_]));
         }
 }
 
@@ -228,33 +230,62 @@ void Translator::Impl::TranslateByteCodeCmp()
 }
 
 void Translator::Impl::TranslateByteCodeIO()
-{
-    std::vector<llvm::Type *> funcArgsType;
-    funcArgsType.push_back(builder_->getInt8PtrTy());
+{    
+    std::vector<Type *> funcArgsTypes;
+    funcArgsTypes.push_back(builder_->getInt8PtrTy());
+    FunctionType *funcType = FunctionType::get(builder_->getInt32Ty(), funcArgsTypes, true);
 
-    auto funcType = llvm::FunctionType::get(builder_->getInt32Ty(), funcArgsType, true);
-    auto formatVal = builder_->CreateGlobalStringPtr("%d", "IOformat");
-    
-    std::vector<llvm::Value *> args;
-    args.push_back(formatVal);
-    Value *pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
-
-    Function *func = nullptr;
-    Value *arg = nullptr;
+    std::string formatStr("%d");
+    llvm::FunctionCallee func;
+    llvm::Value* arg = nullptr;
+    llvm::Value *pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
+    llvm::FunctionCallee printfReg = module_->getOrInsertFunction("printf", funcType);
     if (bytecode_[PC_] == WRITE)
     {
         arg = builder_->CreateLoad(pArg);
-        func = llvm::Function::Create(funcType, llvm::GlobalValue::ExternalLinkage,
-                                      "printf", module_);
+        func = printfReg;
+        formatStr += "\n";
     }
 
     if (bytecode_[PC_] == READ)
     {
         arg = pArg;
-        func = llvm::Function::Create(funcType, llvm::GlobalValue::ExternalLinkage,
-                                      "scanf", module_);
+        func = module_->getOrInsertFunction("scanf", funcType);
     }
+
+    std::string regStr;    
+    switch (bytecode_[PC_ + 1])
+
+    {
+    case RAX:
+        regStr += "RAX: = ";
+        break;
+    case RBX:
+        regStr += "RBX: = ";
+        break;
+    case RCX:
+        regStr += "RCX: = ";
+        break;
+    case RDX:
+        regStr += "RDX: = ";
+        break;
+
+    default:
+        throw std::runtime_error("TranslateByteCodeIO(): Unidefined instruction" +
+                                 std::to_string(bytecode_[PC_ + 1]));
+    }
+    Value *formatRegStrVal = builder_->CreateGlobalStringPtr(regStr, "IORegister");
+    Value *formatStrVal = builder_->CreateGlobalStringPtr(formatStr, "IOformat");            
+
+    std::vector<llvm::Value *> args;
+    args.push_back(formatRegStrVal);
+    builder_->CreateCall(printfReg, args);
+
+    args.clear();
+
+    args.push_back(formatStrVal);
     args.push_back(arg);
+
     builder_->CreateCall(func, args);
 
     PC_ += 2;
@@ -265,7 +296,6 @@ void Translator::Impl::TranslateByteCodeStack()
     llvm::Value* pArg = nullptr;
     llvm::Value* arg = nullptr;
 
-    // Todo check empty 
     switch (bytecode_[PC_]) {
     case PUSH:
         arg = llvm::ConstantInt::get(builder_->getInt32Ty(), (char)bytecode_[PC_ + 1]);
