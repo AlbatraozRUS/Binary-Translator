@@ -27,11 +27,11 @@ INSTRUCTION(pop_r, POP_R, 3,
     PC += 2;)
 
 INSTRUCTION(mov, MOV, 5,
-    registers_[bytecode_[PC + 2]] = bytecode_[PC + 1];
+    registers_[bytecode_[PC + 1]] = bytecode_[PC + 2];
     PC += 3;)
 
 INSTRUCTION(mov_r, MOV_R, 4, 
-    registers_[bytecode_[PC + 2]] = registers_[bytecode_[PC + 1]];
+    registers_[bytecode_[PC + 1]] = registers_[bytecode_[PC + 2]];
     PC += 3;)
 
 INSTRUCTION(call, CALL, 1, 
@@ -56,35 +56,35 @@ INSTRUCTION(read, READ, 3,
 
 
 INSTRUCTION(add, ADD, 5, 
-    registers_[bytecode_[PC + 2]] += bytecode_[PC + 1];
+    registers_[bytecode_[PC + 1]] += bytecode_[PC + 2];
     PC += 3;)
 
 INSTRUCTION(sub, SUB, 5, 
-    registers_[bytecode_[PC + 2]] -= bytecode_[PC + 1];
+    registers_[bytecode_[PC + 1]] -= bytecode_[PC + 2];
     PC += 3;)
 
 INSTRUCTION(imul, IMUL, 5, 
-    registers_[bytecode_[PC + 2]] *= bytecode_[PC + 1];
+    registers_[bytecode_[PC + 1]] *= bytecode_[PC + 2];
     PC += 3;)
 
 INSTRUCTION(idiv, IDIV, 5, 
-    registers_[bytecode_[PC + 2]] /= bytecode_[PC + 1];
+    registers_[bytecode_[PC + 1]] /= bytecode_[PC + 2];
     PC += 3;)
 
 INSTRUCTION(add_r, ADD_R, 4, 
-    registers_[bytecode_[PC + 2]] += registers_[bytecode_[PC + 1]];
+    registers_[bytecode_[PC + 1]] += registers_[bytecode_[PC + 2]];
     PC += 3;)
 
 INSTRUCTION(sub_r, SUB_R, 4, 
-    registers_[bytecode_[PC + 2]] -= registers_[bytecode_[PC + 1]];
+    registers_[bytecode_[PC + 1]] -= registers_[bytecode_[PC + 2]];
     PC += 3;)
 
 INSTRUCTION(imul_r, IMUL_R, 4, 
-    registers_[bytecode_[PC + 2]] *= registers_[bytecode_[PC + 1]];
+    registers_[bytecode_[PC + 1]] *= registers_[bytecode_[PC + 2]];
     PC += 3;)
 
 INSTRUCTION(idiv_r, IDIV_R, 4, 
-    registers_[bytecode_[PC + 2]] /= registers_[bytecode_[PC + 1]];
+    registers_[bytecode_[PC + 1]] /= registers_[bytecode_[PC + 2]];
     PC += 3;)
 
 INSTRUCTION(inc, INC, 3, 
@@ -98,11 +98,11 @@ INSTRUCTION(dec, DEC, 3,
 
 
 INSTRUCTION(cmp, CMP, 5, 
-    isFlag = registers_[bytecode_[PC + 2]] - bytecode_[PC + 1];
+    isFlag = registers_[bytecode_[PC + 1]] - bytecode_[PC + 2];
     PC += 3;)
 
 INSTRUCTION(cmp_r, CMP_R, 4, 
-    isFlag = registers_[bytecode_[PC + 2]] - registers_[bytecode_[PC + 1]];
+    isFlag = registers_[bytecode_[PC + 1]] - registers_[bytecode_[PC + 2]];
     PC += 3;)
 
 INSTRUCTION(jmp, JMP, 1, 
