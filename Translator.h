@@ -3,16 +3,6 @@
 
 #include <experimental/propagate_const>
 #include <memory>
-#include <vector>
-
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/IR/Value.h"
-
-using namespace llvm;
 
 class Translator {
 private: 

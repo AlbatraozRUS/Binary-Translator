@@ -1,5 +1,7 @@
 #include "Translator.h"
 
+#include <iostream>
+
 // namespace {
 //     void ReadFromInput(char *pathToFile, std::string &inputText, bool isFile)
 //     {
@@ -38,4 +40,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

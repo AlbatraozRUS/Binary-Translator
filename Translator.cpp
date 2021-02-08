@@ -1,10 +1,14 @@
+
 #include "Translator.h"
 
 #include <iostream>
-#include <fstream>
 #include <stack>
-#include <map>
 
+#include "llvm-11/llvm/IR/BasicBlock.h"
+#include "llvm-11/llvm/IR/Function.h"
+#include "llvm-11/llvm/IR/IRBuilder.h"
+#include "llvm-11/llvm/IR/LLVMContext.h"
+#include "llvm-11/llvm/IR/Value.h"
 namespace
 {
     bool IsRegRegInst(const int inst)
@@ -55,7 +59,7 @@ private:
     };
 
     std::map <size_t, BranchBB> branchBBs_;
-    std::map <size_t, Function*> functions_;
+    std::map <size_t, llvm::Function*> functions_;
 
     llvm::Function* CreateFunc();
     BranchBB CreateBranchBB(size_t truePC, size_t falsePC);
@@ -241,7 +245,7 @@ Translator::Impl::BranchBB Translator::Impl::CreateBranchBB(size_t truePC, size_
 
     BranchBB branchBB;
 
-    BasicBlock* tmpTrueBB = GetBB(truePC);
+    llvm::BasicBlock* tmpTrueBB = GetBB(truePC);
     if (tmpTrueBB == nullptr)
         branchBB.trueBB = llvm::BasicBlock::Create(context_, "trueBB" +
                                                    std::to_string(numBB), curFunc_);
@@ -252,7 +256,7 @@ Translator::Impl::BranchBB Translator::Impl::CreateBranchBB(size_t truePC, size_
     if (truePC == falsePC || bytecode_[PC_] == JMP)
         return branchBB;
 
-    BasicBlock *tmpFalseBB = GetBB(falsePC);
+    llvm::BasicBlock *tmpFalseBB = GetBB(falsePC);
     if (tmpFalseBB == nullptr)
         branchBB.falseBB = llvm::BasicBlock::Create(context_, "falseBB" + std::to_string(numBB), curFunc_);
     else
@@ -370,9 +374,9 @@ void Translator::Impl::TranslateByteCodeCmp()
 
 void Translator::Impl::TranslateByteCodeIO()
 {    
-    std::vector<Type *> funcArgsTypes;
+    std::vector<llvm::Type *> funcArgsTypes;
     funcArgsTypes.push_back(builder_->getInt8PtrTy());
-    FunctionType *funcType = FunctionType::get(builder_->getInt32Ty(), funcArgsTypes, true);
+    llvm::FunctionType *funcType = llvm::FunctionType::get(builder_->getInt32Ty(), funcArgsTypes, true);
 
     std::string formatStr("%d");
     llvm::FunctionCallee func;
@@ -413,8 +417,8 @@ void Translator::Impl::TranslateByteCodeIO()
         throw std::runtime_error("TranslateByteCodeIO(): Unidefined instruction" +
                                  std::to_string(bytecode_[PC_ + 1]));
     }
-    Value *formatRegStrVal = builder_->CreateGlobalStringPtr(regStr, "IORegister");
-    Value *formatStrVal = builder_->CreateGlobalStringPtr(formatStr, "IOformat");            
+    llvm::Value *formatRegStrVal = builder_->CreateGlobalStringPtr(regStr, "IORegister");
+    llvm::Value *formatStrVal = builder_->CreateGlobalStringPtr(formatStr, "IOformat");            
 
     std::vector<llvm::Value *> args;
     args.push_back(formatRegStrVal);
