@@ -5,7 +5,7 @@
 #include <memory>
 
 class Translator {
-private: 
+private:
     class Impl;
     std::experimental::propagate_const<std::unique_ptr<Impl>> pImpl_;
 
@@ -24,8 +24,7 @@ public:
     void Dump() const;
 };
 
-enum Id_Instructions
-{
+enum Id_Instructions {
     PUSH = 0x68,
     PUSH_R = 0x50,
     POP_R = 0x58,
@@ -59,8 +58,7 @@ enum Id_Instructions
     JNE = 0x85,
 };
 
-enum Registers
-{
+enum Registers {
     RAX,
     RBX,
     RCX,

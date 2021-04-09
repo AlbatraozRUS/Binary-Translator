@@ -9,29 +9,29 @@
 #include "llvm-11/llvm/IR/IRBuilder.h"
 #include "llvm-11/llvm/IR/LLVMContext.h"
 #include "llvm-11/llvm/IR/Value.h"
-namespace
+
+namespace {
+
+bool IsRegRegInst(const int inst)
 {
-    bool IsRegRegInst(const int inst)
-    {
-        if (inst == ADD_R  || inst == SUB_R  ||
-            inst == IMUL_R || inst == IDIV_R ||
-            inst == CMP_R  || inst == MOV_R)
-            return true;
+    if (inst == ADD_R  || inst == SUB_R  ||
+        inst == IMUL_R || inst == IDIV_R ||
+        inst == CMP_R  || inst == MOV_R)
+        return true;
 
-        return false;
-    }
+    return false;
+}
 
-    bool IsJumpInst(const int inst)
-    {
-        if (inst == JMP || inst == JG || inst == JGE || inst == JL ||
-            inst == JLE || inst == JE || inst == JNE)
-            return true;
-        return false;    
-    }
+bool IsJumpInst(const int inst)
+{
+    if (inst == JMP || inst == JG || inst == JGE || inst == JL ||
+        inst == JLE || inst == JE || inst == JNE)
+        return true;
+    return false;
+}
 } // namespace
 
-class Translator::Impl
-{
+class Translator::Impl {
 private:
     std::string pathToInputFile_;
 
@@ -54,7 +54,7 @@ private:
         llvm::BasicBlock* trueBB  = nullptr;
         size_t truePC = 0;
 
-        llvm::BasicBlock* falseBB = nullptr;        
+        llvm::BasicBlock* falseBB = nullptr;
         size_t falsePC = 0;
     };
 
@@ -106,23 +106,26 @@ void Translator::Impl::Preprocess()
 
     llvm::FunctionType *funcType =
             llvm::FunctionType::get(builder_->getInt32Ty(), false);
-    llvm::Function *mainFunc = 
+    llvm::Function *mainFunc =
             llvm::Function::Create(funcType, llvm::Function::ExternalLinkage,
                                    "main", module_);
 
-    llvm::BasicBlock *entryBB = llvm::BasicBlock::Create(context_, "entryBB", mainFunc);
+    llvm::BasicBlock *entryBB = llvm::BasicBlock::Create(context_, "entryBB",
+                                                         mainFunc);
 
     builder_->SetInsertPoint(entryBB);
     curFunc_ = mainFunc;
-    
-    for (; PC_ < sizeByteCode_; MovePC()){
+
+    for (; PC_ < sizeByteCode_; MovePC()) {
         if (bytecode_[PC_] == CALL)
             if (GetFunction(PC_ + (char)bytecode_[PC_ + 1]) == nullptr)
                 functions_.insert(std::make_pair(PC_ + (char)bytecode_[PC_ + 1],
                                                  CreateFunc()));
-        
+
         if (IsJumpInst(bytecode_[PC_]))
-            branchBBs_.insert(std::make_pair(PC_, CreateBranchBB(PC_ + (char)bytecode_[PC_ + 1], PC_ + 2)));
+            branchBBs_.insert(std::make_pair
+                            (PC_, CreateBranchBB(PC_ + (char)bytecode_[PC_ + 1],
+                                                PC_ + 2)));
     }
 
     curFunc_ = mainFunc;
@@ -142,23 +145,23 @@ void Translator::Impl::Translate()
 
     regs_->setInitializer(llvm::ConstantArray::get(regsType_, temp));
 
-    TranslateByteCode();    
+    TranslateByteCode();
 }
 
 void Translator::Impl::TranslateByteCode()
 {
     llvm::Function* tmpFunc = nullptr;
     llvm::BasicBlock* tmpBB = nullptr;
-    while (PC_ < sizeByteCode_) {                
+    while (PC_ < sizeByteCode_) {
 
         tmpFunc = GetFunction(PC_);
         if (tmpFunc != nullptr)
-            curFunc_ = tmpFunc;            
+            curFunc_ = tmpFunc;
 
         tmpBB = GetBB(PC_);
         if (tmpBB != nullptr)
             builder_->SetInsertPoint(tmpBB);
-        
+
 
         switch (bytecode_[PC_]) {
         case ADD_R:
@@ -227,14 +230,14 @@ llvm::Function* Translator::Impl::CreateFunc()
     numFunc++;
 
     llvm::FunctionType *funcType = llvm::FunctionType::get(builder_->getVoidTy(), false);
-    llvm::Function* function = 
+    llvm::Function* function =
         llvm::Function::Create(funcType, llvm::Function::ExternalLinkage,
                                "Function" + std::to_string(numFunc), module_);
 
     curFunc_ = function;
     size_t startFuncPC = PC_ + (char)bytecode_[PC_ + 1];
-    branchBBs_.insert(std::make_pair(startFuncPC, CreateBranchBB(startFuncPC, startFuncPC)));    
-    
+    branchBBs_.insert(std::make_pair(startFuncPC, CreateBranchBB(startFuncPC, startFuncPC)));
+
     return function;
 }
 
@@ -261,7 +264,7 @@ Translator::Impl::BranchBB Translator::Impl::CreateBranchBB(size_t truePC, size_
         branchBB.falseBB = llvm::BasicBlock::Create(context_, "falseBB" + std::to_string(numBB), curFunc_);
     else
         branchBB.falseBB = tmpFalseBB;
-    branchBB.falsePC = falsePC;    
+    branchBB.falsePC = falsePC;
 
     return branchBB;
 }
@@ -273,8 +276,7 @@ void Translator::Impl::TranslateByteCodeExpression()
     llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
 
     llvm::Value *arg_2 = nullptr;
-    if (IsRegRegInst(bytecode_[PC_]))
-    {
+    if (IsRegRegInst(bytecode_[PC_])) {
         llvm::Value *pArg_2 = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
                                                            bytecode_[PC_ + 2]);
         arg_2 = builder_->CreateLoad(pArg_2);
@@ -311,14 +313,14 @@ void Translator::Impl::TranslateByteCodeExpression()
 
     case DEC:
         arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), 1);
-        res = builder_->CreateSub(arg_1, arg_2); 
+        res = builder_->CreateSub(arg_1, arg_2);
         break;
-    
+
     case MOV:
     case MOV_R:
         res = arg_2;
         break;
-       
+
     default:
         throw std::runtime_error("TranslateByteCodeExpression(): Unidefined instruction" + std::to_string(bytecode_[PC_]));
     }
@@ -336,13 +338,14 @@ void Translator::Impl::TranslateByteCodeJumps()
         builder_->CreateBr(trueBB);
     else
         builder_->CreateCondBr(curCmpValue_, trueBB, falseBB);
-        
+
     MovePC();
 }
 
 void Translator::Impl::TranslateByteCodeCmp()
-{    
-    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
+{
+    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
+                                                       bytecode_[PC_ + 1]);
     llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
 
     llvm::Value *arg_2 = nullptr;
@@ -353,8 +356,9 @@ void Translator::Impl::TranslateByteCodeCmp()
         arg_2 = builder_->CreateLoad(pArg_2);
     }
     else
-        arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), (char)bytecode_[PC_ + 2]);
-    
+        arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(),
+                                       (char)bytecode_[PC_ + 2]);
+
     llvm::CmpInst::Predicate predicate;
     switch (bytecode_[PC_ + 3]) {
         case JMP: return;
@@ -364,7 +368,7 @@ void Translator::Impl::TranslateByteCodeCmp()
         case JLE: predicate = llvm::CmpInst::Predicate::ICMP_SLE;  break;
         case JE:  predicate = llvm::CmpInst::Predicate::ICMP_EQ;   break;
         case JNE: predicate = llvm::CmpInst::Predicate::ICMP_NE;   break;
-        default: 
+        default:
             throw std::runtime_error("TranslateByteCodeCmp(): Jump instruction is not found");
     }
 
@@ -373,33 +377,33 @@ void Translator::Impl::TranslateByteCodeCmp()
 }
 
 void Translator::Impl::TranslateByteCodeIO()
-{    
+{
     std::vector<llvm::Type *> funcArgsTypes;
     funcArgsTypes.push_back(builder_->getInt8PtrTy());
-    llvm::FunctionType *funcType = llvm::FunctionType::get(builder_->getInt32Ty(), funcArgsTypes, true);
+    llvm::FunctionType *funcType =
+                                 llvm::FunctionType::get(builder_->getInt32Ty(),
+                                                         funcArgsTypes, true);
 
     std::string formatStr("%d");
     llvm::FunctionCallee func;
     llvm::Value* arg = nullptr;
-    llvm::Value *pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
-    llvm::FunctionCallee printfReg = module_->getOrInsertFunction("printf", funcType);
-    if (bytecode_[PC_] == WRITE)
-    {
+    llvm::Value *pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
+                                                     bytecode_[PC_ + 1]);
+    llvm::FunctionCallee printfReg = module_->getOrInsertFunction("printf",
+                                                                  funcType);
+    if (bytecode_[PC_] == WRITE) {
         arg = builder_->CreateLoad(pArg);
         func = printfReg;
         formatStr += "\n";
     }
 
-    if (bytecode_[PC_] == READ)
-    {
+    if (bytecode_[PC_] == READ) {
         arg = pArg;
         func = module_->getOrInsertFunction("scanf", funcType);
     }
 
-    std::string regStr;    
-    switch (bytecode_[PC_ + 1])
-
-    {
+    std::string regStr;
+    switch (bytecode_[PC_ + 1]) {
     case RAX:
         regStr += "RAX: = ";
         break;
@@ -414,11 +418,13 @@ void Translator::Impl::TranslateByteCodeIO()
         break;
 
     default:
-        throw std::runtime_error("TranslateByteCodeIO(): Unidefined instruction" +
+        throw std::runtime_error("TranslateByteCodeIO(): Undefined instruct" +
                                  std::to_string(bytecode_[PC_ + 1]));
     }
-    llvm::Value *formatRegStrVal = builder_->CreateGlobalStringPtr(regStr, "IORegister");
-    llvm::Value *formatStrVal = builder_->CreateGlobalStringPtr(formatStr, "IOformat");            
+    llvm::Value *formatRegStrVal = builder_->CreateGlobalStringPtr(regStr,
+                                                                   "IORegister");
+    llvm::Value *formatStrVal = builder_->CreateGlobalStringPtr(formatStr,
+                                                                "IOformat");
 
     std::vector<llvm::Value *> args;
     args.push_back(formatRegStrVal);
@@ -450,7 +456,7 @@ void Translator::Impl::TranslateByteCodeStack()
         arg = builder_->CreateLoad(pArg);
         stackIR_.push(arg);
         break;
-    
+
     case POP_R:
         pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0, bytecode_[PC_ + 1]);
         arg = stackIR_.top();
@@ -459,18 +465,18 @@ void Translator::Impl::TranslateByteCodeStack()
         break;
 
     default:
-        throw std::runtime_error("TranslateByteCodeStack(): Unidefined instruction" 
+        throw std::runtime_error("TranslateByteCodeStack(): Unidefined instruction"
                                  + std::to_string(bytecode_[PC_]));
-    } 
+    }
 
     MovePC();
 }
 
 void Translator::Impl::TranslateByteCodeCall()
-{       
+{
     llvm::Function* function = GetFunction(PC_ + (char)bytecode_[PC_ + 1]);
     builder_->CreateCall(function);
-    
+
     MovePC();
 }
 
@@ -486,7 +492,8 @@ void Translator::Impl::TranslateByteCodeExit()
     MovePC();
 }
 
-Translator::Translator(char *const pathToInputFile) : pImpl_(std::make_unique<Impl>(pathToInputFile)){};
+Translator::Translator(char *const pathToInputFile) :
+    pImpl_(std::make_unique<Impl>(pathToInputFile)){};
 
 Translator::~Translator() = default;
 
@@ -517,7 +524,7 @@ void Translator::Impl::AllocByteCodeBuf()
 
 void Translator::Impl::MovePC()
 {
-    switch(bytecode_[PC_]){
+    switch (bytecode_[PC_]) {
     case ADD_R:
     case ADD:
     case SUB_R:
@@ -541,18 +548,18 @@ void Translator::Impl::MovePC()
     case JE:
     case JNE:
     case WRITE:
-    case READ:                
+    case READ:
     case PUSH:
     case PUSH_R:
-    case POP_R:        
+    case POP_R:
     case CALL:
     case INC:
     case DEC:
         PC_ += 2;
         break;
 
-    case RET:                
-    case EXIT:        
+    case RET:
+    case EXIT:
         PC_ += 1;
         break;
 
@@ -570,16 +577,16 @@ llvm::BasicBlock* Translator::Impl::GetBB(size_t PC) const
         if (branchBB.second.falsePC == PC)
             return branchBB.second.falseBB;
     }
-    
+
     return nullptr;
 }
 
-llvm::Function* Translator::Impl::GetFunction(size_t PC) const 
+llvm::Function* Translator::Impl::GetFunction(size_t PC) const
 {
     auto function = functions_.find(PC);
     if (function != functions_.end())
         return function->second;
-    
+
     return nullptr;
 }
 
@@ -587,7 +594,7 @@ void Translator::Translate()
 {
     pImpl_->Preprocess();
     pImpl_->Translate();
-    
+
 }
 
 void Translator::Dump() const
