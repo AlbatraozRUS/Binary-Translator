@@ -12,17 +12,98 @@
 
 namespace {
 
-bool IsRegRegInst(const int inst)
+enum IdInstructions {
+    NUM_PUSH = 0,
+    NUM_PUSH_R,
+    NUM_POP_R,
+    NUM_MOV,
+    NUM_MOV_R,
+    NUM_MOV_RP,
+    NUM_MOV_PR,
+    NUM_CALL,
+    NUM_RET,
+    NUM_EXIT,
+    NUM_WRITE,
+    NUM_READ,
+
+    NUM_ADD,
+    NUM_SUB,
+    NUM_IMUL,
+    NUM_IDIV,
+    NUM_ADD_R,
+    NUM_SUB_R,
+    NUM_IMUL_R,
+    NUM_IDIV_R,
+    NUM_INC,
+    NUM_DEC,
+
+    NUM_CMP,
+    NUM_CMP_R,
+    NUM_JMP,
+    NUM_JG,
+    NUM_JGE,
+    NUM_JL,
+    NUM_JLE,
+    NUM_JE,
+    NUM_JNE,
+};
+
+enum Id_Instructions {
+    PUSH = 0x68,
+    PUSH_R = 0x50,
+    POP_R = 0x58,
+    MOV = 0xB8,
+    MOV_R = 0xBB,
+    MOV_RP = 0xBC,
+    MOV_PR = 0xBD,
+    CALL = 0xE8,
+    RET = 0xC3,
+    EXIT = 0xFF,
+    WRITE = 0xE6,
+    READ = 0xE4,
+
+    ADD = 0x01,
+    SUB = 0x29,
+    IMUL = 0x6B,
+    IDIV = 0xF6,
+    ADD_R = 0x03,
+    SUB_R = 0x2B,
+    IMUL_R = 0xAF,
+    IDIV_R = 0xF7,
+    INC = 0x40,
+    DEC = 0x48,
+
+    CMP = 0x3B,
+    CMP_R = 0x39,
+    JMP = 0xE9,
+    JG = 0x8F,
+    JGE = 0x8D,
+    JL = 0x8C,
+    JLE = 0x8E,
+    JE = 0x75,
+    JNE = 0x85,
+};
+
+enum Registers {
+    RAX,
+    RBX,
+    RCX,
+    RDX,
+    NREGS,
+};
+
+bool IsRegRegInst(int inst)
 {
     if (inst == ADD_R  || inst == SUB_R  ||
         inst == IMUL_R || inst == IDIV_R ||
-        inst == CMP_R  || inst == MOV_R)
+        inst == CMP_R  || inst == MOV_R  ||
+        inst == MOV_RP || inst == MOV_PR)
         return true;
 
     return false;
 }
 
-bool IsJumpInst(const int inst)
+bool IsJumpInst(int inst)
 {
     if (inst == JMP || inst == JG || inst == JGE || inst == JL ||
         inst == JLE || inst == JE || inst == JNE)
@@ -44,11 +125,32 @@ private:
     llvm::Module* module_       = nullptr;
     llvm::Function* curFunc_    = nullptr;
     llvm::IRBuilder<>* builder_ = nullptr;
-    llvm::GlobalVariable* regs_ = nullptr;
-    llvm::ArrayType* regsType_  = nullptr;
-    llvm::Value* curCmpValue_   = nullptr;
 
     std::stack<llvm::Value *> stackIR_;
+    llvm::Value* curCmpValue_   = nullptr;
+
+    // llvm::GlobalVariable* regs_ = nullptr;
+    // llvm::ArrayType* regsType_  = nullptr;
+
+    struct GlobalArray {
+        size_t size = 0;
+        std::string name{};
+        llvm::ArrayType* type       = nullptr;
+        llvm::GlobalVariable* array = nullptr;
+    };
+
+    GlobalArray regs_ {
+        .size = NREGS,
+        .name = "regs_",
+    };
+
+    GlobalArray array_ {
+        .size = 10,
+        .name = "array_",
+    };
+
+
+    // TODO GlobalArray
 
     struct BranchBB {
         llvm::BasicBlock* trueBB  = nullptr;
@@ -64,10 +166,11 @@ private:
     llvm::Function* CreateFunc();
     BranchBB CreateBranchBB(size_t truePC, size_t falsePC);
 
-    void TranslateByteCode();
     void ReadBytecode();
     void AllocByteCodeBuf();
+    void CreateGlobalArray(GlobalArray& GA);
 
+    void TranslateByteCode();
     void TranslateByteCodeExpression();
     void TranslateByteCodeJumps();
     void TranslateByteCodeCmp();
@@ -132,19 +235,15 @@ void Translator::Impl::Preprocess()
     PC_ = 0;
 }
 
+void Translator::Impl::PreprocessBenchmark()
+{
+    CreateGlobalArray(array_);
+    //TODO fill array
+}
+
 void Translator::Impl::Translate()
 {
-    // Create global array of registers
-    regsType_ = llvm::ArrayType::get(builder_->getInt32Ty(), NREGS);
-    module_->getOrInsertGlobal("regs_", regsType_);
-    regs_ = module_->getNamedGlobal("regs_");
-
-    std::vector<llvm::Constant *> temp;
-    for (size_t i = 0; i < NREGS; i++)
-        temp.push_back(llvm::ConstantInt::get(builder_->getInt32Ty(), 0));
-
-    regs_->setInitializer(llvm::ConstantArray::get(regsType_, temp));
-
+    CreateGlobalArray(regs_);
     TranslateByteCode();
 }
 
@@ -162,7 +261,6 @@ void Translator::Impl::TranslateByteCode()
         if (tmpBB != nullptr)
             builder_->SetInsertPoint(tmpBB);
 
-
         switch (bytecode_[PC_]) {
         case ADD_R:
         case ADD:
@@ -176,6 +274,8 @@ void Translator::Impl::TranslateByteCode()
         case DEC:
         case MOV:
         case MOV_R:
+        case MOV_RP:
+        case MOV_PR:
             TranslateByteCodeExpression();
             break;
 
@@ -280,13 +380,14 @@ Translator::Impl::BranchBB Translator::Impl::CreateBranchBB(size_t truePC,
 void Translator::Impl::TranslateByteCodeExpression()
 {
 
-    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
-                                                       bytecode_[PC_ + 1]);
-    llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
+    llvm::Value* pArg_1 = builder_->CreateConstGEP2_32(regs_.type, regs_.array,
+                                                       0, bytecode_[PC_ + 1]);
+    llvm::Value* arg_1 = builder_->CreateLoad(pArg_1);
 
-    llvm::Value *arg_2 = nullptr;
+    llvm::Value* arg_2 = nullptr;
     if (IsRegRegInst(bytecode_[PC_])) {
-        llvm::Value *pArg_2 = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
+        llvm::Value *pArg_2 = builder_->CreateConstGEP2_32(regs_.type,
+                                                           regs_.array, 0,
                                                            bytecode_[PC_ + 2]);
         arg_2 = builder_->CreateLoad(pArg_2);
     }
@@ -294,8 +395,21 @@ void Translator::Impl::TranslateByteCodeExpression()
         arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(),
                                        (char)bytecode_[PC_ + 2]);
 
-    llvm::Value *res = nullptr;
+    llvm::Value* res = nullptr;
     switch (bytecode_[PC_]) {
+    case MOV_RP: {
+        llvm::Value* pArg_2 = builder_->CreateGEP(array_.type, array_.array,
+                                                arg_2, array_.name);
+        res = builder_->CreateLoad(pArg_2);
+        break;
+    }
+    case MOV_PR:
+        pArg_1 = builder_->CreateGEP(array_.type, array_.array,
+                                     arg_1, array_.name);
+        // Load?
+        res = arg_2;
+        break;
+
     case ADD:
     case ADD_R:
         res = builder_->CreateAdd(arg_1, arg_2);
@@ -356,14 +470,15 @@ void Translator::Impl::TranslateByteCodeJumps()
 
 void Translator::Impl::TranslateByteCodeCmp()
 {
-    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
-                                                       bytecode_[PC_ + 1]);
+    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(regs_.type, regs_.array,
+                                                       0, bytecode_[PC_ + 1]);
     llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
 
     llvm::Value *arg_2 = nullptr;
     if (IsRegRegInst(bytecode_[PC_]))
     {
-        llvm::Value *pArg_2 = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
+        llvm::Value *pArg_2 = builder_->CreateConstGEP2_32(regs_.type,
+                                                           regs_.array, 0,
                                                            bytecode_[PC_ + 2]);
         arg_2 = builder_->CreateLoad(pArg_2);
     }
@@ -400,7 +515,7 @@ void Translator::Impl::TranslateByteCodeIO()
     std::string formatStr("%d");
     llvm::FunctionCallee func;
     llvm::Value* arg = nullptr;
-    llvm::Value *pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
+    llvm::Value *pArg = builder_->CreateConstGEP2_32(regs_.type, regs_.array, 0,
                                                      bytecode_[PC_ + 1]);
     llvm::FunctionCallee printfReg = module_->getOrInsertFunction("printf",
                                                                   funcType);
@@ -467,14 +582,14 @@ void Translator::Impl::TranslateByteCodeStack()
         break;
 
     case PUSH_R:
-        pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
+        pArg = builder_->CreateConstGEP2_32(regs_.type, regs_.array, 0,
                                             bytecode_[PC_ + 1]);
         arg = builder_->CreateLoad(pArg);
         stackIR_.push(arg);
         break;
 
     case POP_R:
-        pArg = builder_->CreateConstGEP2_32(regsType_, regs_, 0,
+        pArg = builder_->CreateConstGEP2_32(regs_.type, regs_.array, 0,
                                             bytecode_[PC_ + 1]);
         arg = stackIR_.top();
         builder_->CreateStore(arg, pArg);
@@ -538,6 +653,20 @@ void Translator::Impl::ReadBytecode()
 void Translator::Impl::AllocByteCodeBuf()
 {
     bytecode_ = new unsigned char[sizeByteCode_];
+}
+
+void Translator::Impl::CreateGlobalArray(GlobalArray& GA)
+{
+    GA.type = llvm::ArrayType::get(builder_->getInt32Ty(),
+                                            GA.size);
+    module_->getOrInsertGlobal(GA.name, GA.type);
+    GA.array = module_->getNamedGlobal(GA.name);
+
+    std::vector<llvm::Constant *> temp;
+    for (size_t i = 0; i < GA.size; i++)
+        temp.push_back(llvm::ConstantInt::get(builder_->getInt32Ty(), 0));
+
+    GA.array->setInitializer(llvm::ConstantArray::get(GA.type, temp));
 }
 
 void Translator::Impl::MovePC()
