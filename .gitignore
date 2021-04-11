@@ -1,6 +1,5 @@
 /build
 /Build
-/
 *.json
 *DS_Store
 /.idea
@@ -8,7 +7,13 @@
 /CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 Binary-Translator
 temp.ll
 a.out
+/CPU_Simulator.dSYM
+CPU_Simulator
+*.json
+*cmake*
+Makefile
+bytecode.txt
+test.txt
