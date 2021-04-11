@@ -1,0 +1,26 @@
+mov rdx, 1
+:pass_sort
+cmp rdx, 1
+jne end_sort
+mov_r rdx, 0
+pop_r rax
+pop_r rcx
+push_r rcx
+push_r rax
+:next
+pop_r rax
+cmp rcx, rax
+push_r rax
+je pass_sort
+mov_rp rax, rcx
+add rcx, 1
+mov_rp rbx, rcx
+cmp rax, rbx
+jl next
+sub rcx, 1
+mov_pr rcx, rbx
+add rcx, 1
+mov_pr rcx, rax
+mov rdx, 1
+jmp next
+:end_sort
