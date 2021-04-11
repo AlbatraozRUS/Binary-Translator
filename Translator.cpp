@@ -12,7 +12,7 @@
 
 namespace {
 
-enum IdInstructions {
+enum NumInstructions {
     NUM_PUSH = 0,
     NUM_PUSH_R,
     NUM_POP_R,
@@ -49,7 +49,7 @@ enum IdInstructions {
     N_INST,
 };
 
-enum Id_Instructions {
+enum IdInstructions {
     PUSH = 0x68,
     PUSH_R = 0x50,
     POP_R = 0x58,
