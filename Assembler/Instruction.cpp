@@ -14,7 +14,7 @@ const std::map<int, std::string> kRegisterList = { {RAX, "rax"},
                                                    {RCX, "rcx"},
                                                    {RDX, "rdx"} };
 
-int WhichReg(const std::string &instructionText, bool isFirstArg = true)
+int WhichReg(const std::string& instructionText, bool isFirstArg = true)
 {
     char inputRegister[10] = {0};
     if (isFirstArg)
@@ -61,7 +61,7 @@ Instruction::Instruction(Instruction &&) = default;
 Instruction& Instruction::operator=(Instruction &&) = default;
 
 
-void Instruction::Impl::ParseArguments(const std::string &instructionText)
+void Instruction::Impl::ParseArguments(const std::string& instructionText)
 {
     switch (argType_) {
     case NOARG:
@@ -127,9 +127,9 @@ void Instruction::Dump() const
 }
 
 
-std::string Instruction::ConvertToByteCode(std::map<std::string,
-                                                    OffsetLabel> &labels,
-                                           int offset) const
+std::string
+Instruction::ConvertToByteCode(std::map<std::string, OffsetLabel>& labels,
+                               int offset) const
 {
     std::string output;
     output += pImpl_->Id_;

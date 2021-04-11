@@ -3,12 +3,16 @@ mov rax, 1
 call factorial
 write rax
 exit
+
+
 :factorial
 cmp rbx, 1
 jne next
 ret
 :next
+
 imul_r rax, rbx
 dec rbx
 call factorial
+
 ret

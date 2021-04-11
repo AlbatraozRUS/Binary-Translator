@@ -29,6 +29,10 @@ void Assembler::ReadFromFile()
         if (instructionText.find_first_of("#") != std::string::npos)
             continue;
 
+        if (!instructionText[0])
+            continue;
+
+        std::cerr << instructionText << "\n";
         instructionsText_.push_back(instructionText);
     }
 
@@ -42,7 +46,7 @@ void Assembler::Assemble()
     std::string label;
     OffsetLabel temp;
 
-    for (const auto &instText : instructionsText_) {
+    for (const auto& instText : instructionsText_) {
         if (instText[0] == ':') {
             label = instText.substr(1);
             labels_.insert(make_pair(label, temp));
