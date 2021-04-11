@@ -95,7 +95,7 @@ void Instruction::Impl::ParseArguments(const std::string &instructionText)
 
 void Instruction::ParseInstruction(const std::string &instructionText)
 {
-#define INSTRUCTION(name, id, argtype, num, code) {                  \
+#define INSTRUCTION(name, id, argtype, num, size, code) {       \
         if (instructionText.find(#name) != std::string::npos) { \
             pImpl_->Id_ = id;                                   \
             pImpl_->argType_ = argtype;                         \

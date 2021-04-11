@@ -8,17 +8,17 @@ void CpuSimulator::Run(char* const pathToInputFile)
 {
     ReadBytecode(pathToInputFile);
 
-    #define INSTRUCTION(name, id, argType, num, code)  \
-        case id: /*Dump();*/ code break;               \
+    #define INSTRUCTION(name, id, argType, num, size, code)  \
+        case id: /*Dump();*/ code break;                     \
 
 
     #define INSTRUCTIONS
     while (true)
-        switch ((unsigned char)bytecode_[PC]){
-            #include "Commands_DSL.txt"
-            default:
-                throw std::runtime_error
-                    ("Simulator: Unidentified instruction " + std::to_string(bytecode_[PC]));
+        switch ((unsigned char)bytecode_[PC]) {
+        #include "Commands_DSL.txt"
+        default:
+            throw std::runtime_error
+                ("Simulator: Unidentified instruction " + std::to_string(bytecode_[PC]));
         }
 
     #undef INSTRUCTIONS

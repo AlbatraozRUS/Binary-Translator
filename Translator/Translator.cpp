@@ -113,8 +113,8 @@ private:
     llvm::BasicBlock* GetBB(size_t PC) const;
     void MovePC();
 
-    int TranslateIDInst(const int keyID);
-    void AddTact(const int numInst);
+    int TranslateIDInst(int keyID);
+    void AddTact(int numInst);
     void PrintBenchmarkResult();
 
 public:
@@ -604,95 +604,43 @@ void Translator::Impl::CreateGlobalArray(GlobalArray& GA)
 
 void Translator::Impl::MovePC()
 {
+    #define INSTRUCTION(name, id, argType, num, size, code)  \
+        case id: PC_ += size; break;                         \
+
+    #define INSTRUCTIONS
     switch (bytecode_[PC_]) {
-    case ADD_R:
-    case ADD:
-    case SUB_R:
-    case SUB:
-    case IMUL_R:
-    case IMUL:
-    case IDIV_R:
-    case IDIV:
-    case MOV:
-    case MOV_R:
-    case CMP:
-    case CMP_R:
-        PC_ += 3;
-        break;
-
-    case JMP:
-    case JG:
-    case JGE:
-    case JL:
-    case JLE:
-    case JE:
-    case JNE:
-    case WRITE:
-    case READ:
-    case PUSH:
-    case PUSH_R:
-    case POP_R:
-    case CALL:
-    case INC:
-    case DEC:
-        PC_ += 2;
-        break;
-
-    case RET:
-    case EXIT:
-        PC_ += 1;
-        break;
+    #include "Commands_DSL.txt"
 
     default:
         throw std::runtime_error("TranslateByteCode():Unidefined instruction" +
                                  std::to_string(bytecode_[PC_]));
     }
+
+    #undef INSTRUCTIONS
+    #undef INSTRUCTION
 }
 
-int Translator::Impl::TranslateIDInst(const int keyID)
+int Translator::Impl::TranslateIDInst(int keyID)
 {
-    switch(keyID) {
-    case ADD_R:         return NUM_ADD_R;
-    case ADD:           return NUM_ADD;
-    case SUB_R:         return NUM_SUB_R;
-    case SUB:           return NUM_SUB;
-    case IMUL_R:        return IMUL_R;
-    case IMUL:          return NUM_IMUL;
-    case IDIV_R:        return NUM_IDIV_R;
-    case IDIV:          return NUM_IDIV;
-    case INC:           return NUM_INC;
-    case DEC:           return NUM_DEC;
-    case MOV:           return NUM_MOV;
-    case MOV_R:         return NUM_MOV_R;
-    case MOV_RP:        return NUM_MOV_PR;
-    case MOV_PR:        return NUM_MOV_PR;
-    case JMP:           return NUM_JMP;
-    case JG:            return NUM_JG;
-    case JGE:           return NUM_JGE;
-    case JL:            return NUM_JL;
-    case JLE:           return NUM_JLE;
-    case JE:            return NUM_JE;
-    case JNE:           return NUM_JNE;
-    case CMP:           return NUM_CMP;
-    case CMP_R:         return NUM_CMP_R;
-    case WRITE:         return NUM_WRITE;
-    case READ:          return NUM_READ;
-    case PUSH:          return NUM_PUSH;
-    case PUSH_R:        return NUM_PUSH_R;
-    case POP_R:         return NUM_POP_R;
-    case CALL:          return NUM_CALL;
-    case RET:           return NUM_RET;
-    case EXIT:          return NUM_EXIT;
-    case N_INST:        return N_INST;
+    #define INSTRUCTION(name, id, argType, num, size, code)  \
+        case id: return num;                                 \
 
+    #define INSTRUCTIONS
+    switch (keyID) {
+    #include "Commands_DSL.txt"
+
+    case N_INST: return N_INST;
     default:
         throw std::runtime_error("TranslateIDInst():"
                                  "Unidefined instruction " +
                                  std::to_string(keyID));
     }
+
+    #undef INSTRUCTIONS
+    #undef INSTRUCTION
 }
 
-void Translator::Impl::AddTact(const int numInst)
+void Translator::Impl::AddTact(int numInst)
 {
     llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(benchmarkResult_.type, benchmarkResult_.array,
                                                        0, TranslateIDInst(numInst));
@@ -712,47 +660,27 @@ void Translator::Impl::PrintBenchmarkResult()
     llvm::FunctionCallee func = module_->getOrInsertFunction("printf",
                                                              funcType);
 
-    const std::string formatStr("\n\n[Result of Benchmark]\nVer 1.0.0\n"
-                                "Number of tacts of each instruction:\n"
-                                "\tPush - %d\n"
-                                "\tPush_R - %d\n"
-                                "\tPop_R - %d\n"
-                                "\tMov - %d\n"
-                                "\tMov_R - %d\n"
-                                "\tMov_RP - %d\n"
-                                "\tCall - %d\n"
-                                "\tRet - %d\n"
-                                "\tExit - %d\n"
-                                "\tWrite - %d\n"
-                                "\tRead - %d\n"
-                                "\tAdd - %d\n"
-                                "\tSub - %d\n"
-                                "\tIMul - %d\n"
-                                "\tIDiv - %d\n"
-                                "\tAdd_R - %d\n"
-                                "\tSub_R - %d\n"
-                                "\tIMul_R - %d\n"
-                                "\tIDiv_R - %d\n"
-                                "\tInc - %d\n"
-                                "\tDec - %d\n"
-                                "\tCmp - %d\n"
-                                "\tCmp_R - %d\n"
-                                "\tJmp - %d\n"
-                                "\tJG - %d\n"
-                                "\tJGE - %d\n"
-                                "\tJL - %d\n"
-                                "\tJLE - %d\n"
-                                "\tJE - %d\n"
-                                "\tJNE - %d\n"
-                                "\nNumber of jumps - %d\n"
-                                "\n[End!]\n\n");
+    std::string formatStr("\n\n[Result of Benchmark]\nVer 1.0.0\n"
+                                "Number of tacts of each instruction:\n");
+    #define INSTRUCTION(name, id, argType, num, size, code)  \
+        formatStr += "\t";                                   \
+        formatStr += #name;                                  \
+        formatStr += " - %d\n";                              \
+
+    #define INSTRUCTIONS
+    #include "Commands_DSL.txt"
+
+    #undef INSTRUCTIONS
+    #undef INSTRUCTION
+    formatStr += "\n\tNumber of jumps - %d\n"
+                 "\n[End!]\n\n";
+
     llvm::Value *formatStrVal =
         builder_->CreateGlobalStringPtr(formatStr, "BenchmarkResult");
 
     std::vector<llvm::Value *> args;
     args.push_back(formatStrVal);
-    for (size_t numInst = 0; numInst < N_INST + 1; numInst++)
-    {
+    for (size_t numInst = 0; numInst < N_INST + 1; numInst++) {
         llvm::Value *pArg = builder_->CreateConstGEP2_32(benchmarkResult_.type,
                                                          benchmarkResult_.array, 0,
                                                          numInst);
