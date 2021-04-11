@@ -9,7 +9,7 @@ void CpuSimulator::Run(char* const pathToInputFile)
     ReadBytecode(pathToInputFile);
 
     #define INSTRUCTION(name, id, argType, num, code)  \
-        case id: /*Dump();*/ code break;                    \
+        case id: /*Dump();*/ code break;               \
 
 
     #define INSTRUCTIONS
