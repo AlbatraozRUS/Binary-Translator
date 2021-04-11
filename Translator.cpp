@@ -4,11 +4,11 @@
 #include <iostream>
 #include <stack>
 
-#include "llvm-11/llvm/IR/BasicBlock.h"
-#include "llvm-11/llvm/IR/Function.h"
-#include "llvm-11/llvm/IR/IRBuilder.h"
-#include "llvm-11/llvm/IR/LLVMContext.h"
-#include "llvm-11/llvm/IR/Value.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Value.h"
 
 namespace {
 
@@ -46,6 +46,7 @@ enum IdInstructions {
     NUM_JLE,
     NUM_JE,
     NUM_JNE,
+    N_INST,
 };
 
 enum Id_Instructions {
@@ -149,6 +150,10 @@ private:
         .name = "array_",
     };
 
+    GlobalArray benchmarkResult_ {
+        .size = N_INST + 1,
+        .name = "nTacts",
+    };
 
     // TODO GlobalArray
 
@@ -184,6 +189,10 @@ private:
     llvm::BasicBlock* GetBB(size_t PC) const;
     void MovePC();
 
+    int TranslateIDInst(const int keyID);
+    void AddTact(const int numInst);
+    void PrintBenchmarkResult();
+
 public:
     Impl(char *const pathToInputFile) : pathToInputFile_(pathToInputFile) {}
 
@@ -194,7 +203,6 @@ public:
 
     void Translate();
     void Preprocess();
-    void PreprocessBenchmark();
 
     friend void Translator::Dump() const;
 
@@ -235,15 +243,11 @@ void Translator::Impl::Preprocess()
     PC_ = 0;
 }
 
-void Translator::Impl::PreprocessBenchmark()
-{
-    CreateGlobalArray(array_);
-    //TODO fill array
-}
-
 void Translator::Impl::Translate()
 {
     CreateGlobalArray(regs_);
+    CreateGlobalArray(array_);
+    CreateGlobalArray(benchmarkResult_);
     TranslateByteCode();
 }
 
@@ -260,6 +264,8 @@ void Translator::Impl::TranslateByteCode()
         tmpBB = GetBB(PC_);
         if (tmpBB != nullptr)
             builder_->SetInsertPoint(tmpBB);
+
+        AddTact(bytecode_[PC_]);
 
         switch (bytecode_[PC_]) {
         case ADD_R:
@@ -458,6 +464,7 @@ void Translator::Impl::TranslateByteCodeExpression()
 
 void Translator::Impl::TranslateByteCodeJumps()
 {
+    AddTact(N_INST); //TODO Change arg to more beautiful
     llvm::BasicBlock* trueBB = GetBB(PC_ + (char)bytecode_[PC_ + 1]);
     llvm::BasicBlock *falseBB = GetBB(PC_ + 2);
     if (bytecode_[PC_] == JMP)
@@ -607,6 +614,7 @@ void Translator::Impl::TranslateByteCodeStack()
 
 void Translator::Impl::TranslateByteCodeCall()
 {
+    AddTact(N_INST);
     llvm::Function* function = GetFunction(PC_ + (char)bytecode_[PC_ + 1]);
     builder_->CreateCall(function);
 
@@ -621,6 +629,7 @@ void Translator::Impl::TranslateByteCodeRet()
 
 void Translator::Impl::TranslateByteCodeExit()
 {
+    PrintBenchmarkResult();
     builder_->CreateRet(llvm::ConstantInt::get(builder_->getInt32Ty(), 0));
     MovePC();
 }
@@ -716,6 +725,120 @@ void Translator::Impl::MovePC()
     }
 }
 
+int Translator::Impl::TranslateIDInst(const int keyID)
+{
+    switch(keyID) {
+    case ADD_R:         return NUM_ADD_R;
+    case ADD:           return NUM_ADD;
+    case SUB_R:         return NUM_SUB_R;
+    case SUB:           return NUM_SUB;
+    case IMUL_R:        return IMUL_R;
+    case IMUL:          return NUM_IMUL;
+    case IDIV_R:        return NUM_IDIV_R;
+    case IDIV:          return NUM_IDIV;
+    case INC:           return NUM_INC;
+    case DEC:           return NUM_DEC;
+    case MOV:           return NUM_MOV;
+    case MOV_R:         return NUM_MOV_R;
+    case MOV_RP:        return NUM_MOV_PR;
+    case MOV_PR:        return NUM_MOV_PR;
+    case JMP:           return NUM_JMP;
+    case JG:            return NUM_JG;
+    case JGE:           return NUM_JGE;
+    case JL:            return NUM_JL;
+    case JLE:           return NUM_JLE;
+    case JE:            return NUM_JE;
+    case JNE:           return NUM_JNE;
+    case CMP:           return NUM_CMP;
+    case CMP_R:         return NUM_CMP_R;
+    case WRITE:         return NUM_WRITE;
+    case READ:          return NUM_READ;
+    case PUSH:          return NUM_PUSH;
+    case PUSH_R:        return NUM_PUSH_R;
+    case POP_R:         return NUM_POP_R;
+    case CALL:          return NUM_CALL;
+    case RET:           return NUM_RET;
+    case EXIT:          return NUM_EXIT;
+    case N_INST:        return N_INST;
+
+    default:
+        throw std::runtime_error("TranslateIDInst():"
+                                 "Unidefined instruction " +
+                                 std::to_string(keyID));
+    }
+}
+
+void Translator::Impl::AddTact(const int numInst)
+{
+    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(benchmarkResult_.type, benchmarkResult_.array,
+                                                       0, TranslateIDInst(numInst));
+    llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
+    llvm::Value *arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), 1);
+    builder_->CreateStore(builder_->CreateAdd(arg_1, arg_2), pArg_1);
+}
+
+void Translator::Impl::PrintBenchmarkResult()
+{
+    std::vector<llvm::Type *> funcArgsTypes;
+    funcArgsTypes.push_back(builder_->getInt8PtrTy());
+    llvm::FunctionType *funcType =
+        llvm::FunctionType::get(builder_->getInt32Ty(),
+                                funcArgsTypes, true);
+
+    llvm::FunctionCallee func = module_->getOrInsertFunction("printf",
+                                                             funcType);
+
+    const std::string formatStr("\n\n[Result of Benchmark]\nVer 1.0.0\n"
+                                "Number of tacts of each instruction:\n"
+                                "\tPush - %d\n"
+                                "\tPush_R - %d\n"
+                                "\tPop_R - %d\n"
+                                "\tMov - %d\n"
+                                "\tMov_R - %d\n"
+                                "\tMov_RP - %d\n"
+                                "\tCall - %d\n"
+                                "\tRet - %d\n"
+                                "\tExit - %d\n"
+                                "\tWrite - %d\n"
+                                "\tRead - %d\n"
+                                "\tAdd - %d\n"
+                                "\tSub - %d\n"
+                                "\tIMul - %d\n"
+                                "\tIDiv - %d\n"
+                                "\tAdd_R - %d\n"
+                                "\tSub_R - %d\n"
+                                "\tIMul_R - %d\n"
+                                "\tIDiv_R - %d\n"
+                                "\tInc - %d\n"
+                                "\tDec - %d\n"
+                                "\tCmp - %d\n"
+                                "\tCmp_R - %d\n"
+                                "\tJmp - %d\n"
+                                "\tJG - %d\n"
+                                "\tJGE - %d\n"
+                                "\tJL - %d\n"
+                                "\tJLE - %d\n"
+                                "\tJE - %d\n"
+                                "\tJNE - %d\n"
+                                "\nNumber of jumps - %d\n"
+                                "\n[End!]\n\n");
+    llvm::Value *formatStrVal =
+        builder_->CreateGlobalStringPtr(formatStr, "BenchmarkResult");
+
+    std::vector<llvm::Value *> args;
+    args.push_back(formatStrVal);
+    for (size_t numInst = 0; numInst < N_INST + 1; numInst++)
+    {
+        llvm::Value *pArg = builder_->CreateConstGEP2_32(benchmarkResult_.type,
+                                                         benchmarkResult_.array, 0,
+                                                         numInst);
+        llvm::Value *arg = builder_->CreateLoad(pArg);
+        args.push_back(arg);
+    }
+
+    builder_->CreateCall(func, args);
+}
+
 llvm::BasicBlock* Translator::Impl::GetBB(size_t PC) const
 {
     for (auto branchBB : branchBBs_) {
@@ -740,7 +863,6 @@ llvm::Function* Translator::Impl::GetFunction(size_t PC) const
 void Translator::Translate()
 {
     pImpl_->Preprocess();
-    // pImpl_->PreprocessBenchmark();
     pImpl_->Translate();
 }
 
