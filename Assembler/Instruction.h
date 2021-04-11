@@ -21,7 +21,7 @@ private:
 
 public:
     Instruction();
-    
+
     Instruction(const Instruction&) = delete;
     Instruction& operator=(const Instruction&) = delete;
     Instruction(Instruction&&);
@@ -57,6 +57,8 @@ enum Id_Instructions {
     POP_R = 0x58,
     MOV = 0xB8,
     MOV_R = 0xBB,
+    MOV_RP = 0xBC,
+    MOV_PR = 0xBD,
     CALL = 0xE8,
     RET = 0xC3,
     EXIT = 0xFF,

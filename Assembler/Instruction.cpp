@@ -23,7 +23,7 @@ int WhichReg(const std::string &instructionText, bool isFirstArg = true)
         if (inputRegister == kRegister.second)
             return kRegister.first;
 
-    throw std::runtime_error("Assembler: Unidentified register " + 
+    throw std::runtime_error("Assembler: Unidentified register " +
                              instructionText);
 }
 
@@ -38,7 +38,7 @@ private:
     int arg2_ = 0;
     std::string label_;
     std::string labeled_;
-    
+
 public:
     Impl() = default;
 
@@ -101,12 +101,12 @@ void Instruction::ParseInstruction(const std::string &instructionText)
     }
 
 #define INSTRUCTIONS
-#include "../Commands_DSL.txt"
+#include "Commands_DSL.txt"
 
 #undef INSTRUCTIONS
-    
+
     if (pImpl_->Id_ == -1)
-        throw std::runtime_error("Assembler: Unidentified instruction" + 
+        throw std::runtime_error("Assembler: Unidentified instruction" +
                                  instructionText);
 
     pImpl_->ParseArguments(instructionText);

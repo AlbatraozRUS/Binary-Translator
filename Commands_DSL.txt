@@ -1,10 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Macros "instruction" has 3 fields: 
+// Macros "instruction" has 3 fields:
 // 1) <name>     - name of instruction to compare
 // 2) <ID>       - id of instruction (used in enum INSTRUCTIONS in CPU-Simulator.h)
-// 3) <ARGTYPES> - types of arguments of instruction. 
+// 3) <ARGTYPES> - types of arguments of instruction.
 //    NOARG = 0      - without arguments
-//    LABEL = 1      - with a label for jump 
+//    LABEL = 1      - with a label for jump
 //    NUMBER = 2     - argument is a number
 //    REG = 3        - argument is a register
 //    REG_REG = 4    - two registers are arguments
@@ -13,7 +13,7 @@
 
 
 #ifdef INSTRUCTIONS
-INSTRUCTION(push, PUSH, 2, 
+INSTRUCTION(push, PUSH, 2,
     stack_.push(bytecode_[PC + 1]);
     PC += 2;)
 
@@ -30,22 +30,30 @@ INSTRUCTION(mov, MOV, 5,
     registers_[bytecode_[PC + 1]] = bytecode_[PC + 2];
     PC += 3;)
 
-INSTRUCTION(mov_r, MOV_R, 4, 
+INSTRUCTION(mov_r, MOV_R, 4,
     registers_[bytecode_[PC + 1]] = registers_[bytecode_[PC + 2]];
     PC += 3;)
 
-INSTRUCTION(call, CALL, 1, 
-    callerStack_.push(PC + 2); 
+INSTRUCTION(mov_pr, MOV_PR, 4,
+    registers_[bytecode_[PC + 1]] = *(int*)registers_[bytecode_[PC + 2]];
+    PC += 3;)
+
+INSTRUCTION(mov_rp, MOV_RP, 4,
+    *(int*)registers_[bytecode_[PC + 1]] = registers_[bytecode_[PC + 2]];
+    PC += 3;)
+
+INSTRUCTION(call, CALL, 1,
+    callerStack_.push(PC + 2);
     PC += bytecode_[PC + 1];)
 
-INSTRUCTION(ret, RET, 0, 
+INSTRUCTION(ret, RET, 0,
     PC = callerStack_.top();
     callerStack_.pop();)
 
-INSTRUCTION(exit, EXIT, 0, 
+INSTRUCTION(exit, EXIT, 0,
     return;)
 
-INSTRUCTION(write, WRITE, 3, 
+INSTRUCTION(write, WRITE, 3,
     std::cout << registers_[bytecode_[PC + 1]] << "\n";
     PC += 2;)
 
@@ -55,91 +63,91 @@ INSTRUCTION(read, READ, 3,
 
 
 
-INSTRUCTION(add, ADD, 5, 
+INSTRUCTION(add, ADD, 5,
     registers_[bytecode_[PC + 1]] += bytecode_[PC + 2];
     PC += 3;)
 
-INSTRUCTION(sub, SUB, 5, 
+INSTRUCTION(sub, SUB, 5,
     registers_[bytecode_[PC + 1]] -= bytecode_[PC + 2];
     PC += 3;)
 
-INSTRUCTION(imul, IMUL, 5, 
+INSTRUCTION(imul, IMUL, 5,
     registers_[bytecode_[PC + 1]] *= bytecode_[PC + 2];
     PC += 3;)
 
-INSTRUCTION(idiv, IDIV, 5, 
+INSTRUCTION(idiv, IDIV, 5,
     registers_[bytecode_[PC + 1]] /= bytecode_[PC + 2];
     PC += 3;)
 
-INSTRUCTION(add_r, ADD_R, 4, 
+INSTRUCTION(add_r, ADD_R, 4,
     registers_[bytecode_[PC + 1]] += registers_[bytecode_[PC + 2]];
     PC += 3;)
 
-INSTRUCTION(sub_r, SUB_R, 4, 
+INSTRUCTION(sub_r, SUB_R, 4,
     registers_[bytecode_[PC + 1]] -= registers_[bytecode_[PC + 2]];
     PC += 3;)
 
-INSTRUCTION(imul_r, IMUL_R, 4, 
+INSTRUCTION(imul_r, IMUL_R, 4,
     registers_[bytecode_[PC + 1]] *= registers_[bytecode_[PC + 2]];
     PC += 3;)
 
-INSTRUCTION(idiv_r, IDIV_R, 4, 
+INSTRUCTION(idiv_r, IDIV_R, 4,
     registers_[bytecode_[PC + 1]] /= registers_[bytecode_[PC + 2]];
     PC += 3;)
 
-INSTRUCTION(inc, INC, 3, 
+INSTRUCTION(inc, INC, 3,
     registers_[bytecode_[PC + 1]]++;
     PC += 2;)
 
-INSTRUCTION(dec, DEC, 3, 
+INSTRUCTION(dec, DEC, 3,
     registers_[bytecode_[PC + 1]]--;
     PC += 2;)
 
 
 
-INSTRUCTION(cmp, CMP, 5, 
+INSTRUCTION(cmp, CMP, 5,
     isFlag = registers_[bytecode_[PC + 1]] - bytecode_[PC + 2];
     PC += 3;)
 
-INSTRUCTION(cmp_r, CMP_R, 4, 
+INSTRUCTION(cmp_r, CMP_R, 4,
     isFlag = registers_[bytecode_[PC + 1]] - registers_[bytecode_[PC + 2]];
     PC += 3;)
 
-INSTRUCTION(jmp, JMP, 1, 
+INSTRUCTION(jmp, JMP, 1,
     PC += bytecode_[PC + 1];)
 
-INSTRUCTION(jg, JG, 1, 
-    if (isFlag > 0) 
-        PC += bytecode_[PC + 1];
-    else 
-        PC += 2;)
-
-INSTRUCTION(jge, JGE, 1, 
-    if (isFlag >= 0) 
+INSTRUCTION(jg, JG, 1,
+    if (isFlag > 0)
         PC += bytecode_[PC + 1];
     else
         PC += 2;)
 
-INSTRUCTION(jl, JL, 1, 
-    if (isFlag < 0) 
+INSTRUCTION(jge, JGE, 1,
+    if (isFlag >= 0)
         PC += bytecode_[PC + 1];
     else
         PC += 2;)
 
-INSTRUCTION(jle, JLE, 1, 
-    if (isFlag <= 0) 
-        PC += bytecode_[PC + 1];
-    else    
-        PC += 2;)
-
-INSTRUCTION(je, JE, 1, 
-    if (isFlag == 0) 
+INSTRUCTION(jl, JL, 1,
+    if (isFlag < 0)
         PC += bytecode_[PC + 1];
     else
         PC += 2;)
 
-INSTRUCTION(jne, JNE, 1, 
-    if (isFlag != 0) 
+INSTRUCTION(jle, JLE, 1,
+    if (isFlag <= 0)
+        PC += bytecode_[PC + 1];
+    else
+        PC += 2;)
+
+INSTRUCTION(je, JE, 1,
+    if (isFlag == 0)
+        PC += bytecode_[PC + 1];
+    else
+        PC += 2;)
+
+INSTRUCTION(jne, JNE, 1,
+    if (isFlag != 0)
         PC += bytecode_[PC + 1];
     else
         PC += 2;)
