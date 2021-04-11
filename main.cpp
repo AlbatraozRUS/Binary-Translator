@@ -1,3 +1,4 @@
+
 #include "Assembler.h"
 #include "Simulator.h"
 #include "Translator.h"
@@ -11,20 +12,18 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    Assembler assembler(argv[1], argv[2]);
-
     try {
+        BinaryTranslator::Assembler assembler(argv[1], argv[2]);
         assembler.Assemble();
+        // assembler.Dump();
     }
-
     catch (std::exception &exception) {
         std::cerr << exception.what() << "\n";
         exit(EXIT_FAILURE);
     }
-    //assembler.Dump()
 
-    // CpuSimulator cpuSimulator;
     // try {
+    //     BinaryTranslator::CpuSimulator cpuSimulator;
     //     cpuSimulator.Run(argv[2]);
     // }
     // catch (std::exception &exception) {
@@ -33,7 +32,7 @@ int main(int argc, char** argv)
     // }
 
     try {
-        Translator translator(argv[2]);
+        BinaryTranslator::Translator translator(argv[2]);
         translator.Translate();
         translator.Dump();
     }

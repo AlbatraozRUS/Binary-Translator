@@ -1,10 +1,18 @@
+
 #include "Assembler.h"
 
+#include "Constants.h"
+
+#include <fstream>
 #include <iostream>
 
+using namespace BinaryTranslator;
 
-Assembler::Assembler(const char *pathToInputFile, const char *pathToOutputFile) :
-    pathToInputFile_(pathToInputFile), pathToOutputFile_(pathToOutputFile) {}
+Assembler::Assembler(const char *pathToInputFile,
+                     const char *pathToOutputFile) :
+    pathToInputFile_(pathToInputFile),
+          pathToOutputFile_(pathToOutputFile)
+{}
 
 Assembler::~Assembler() = default;
 
@@ -17,8 +25,7 @@ void Assembler::ReadFromFile()
 
     std::string instructionText;
 
-    while (getline(inputFile, instructionText, '\n'))
-    {        
+    while (getline(inputFile, instructionText, '\n')) {
         if (instructionText.find_first_of("#") != std::string::npos)
             continue;
 
@@ -29,41 +36,35 @@ void Assembler::ReadFromFile()
 }
 
 void Assembler::Assemble()
-{    
+{
     ReadFromFile();
-    
+
     std::string label;
     OffsetLabel temp;
 
-    for (const auto &instText : instructionsText_)
-    {
-        if (instText[0] == ':')
-        {
+    for (const auto &instText : instructionsText_) {
+        if (instText[0] == ':') {
             label = instText.substr(1);
             labels_.insert(make_pair(label, temp));
         }
-        else
-        {
+        else {
             Instruction inst;
-            try
-            {
+            try {
                 inst.ParseInstruction(instText);
             }
-            catch (std::exception &exception)
-            {
+            catch (std::exception &exception) {
                 std::cerr << exception.what();
                 exit(EXIT_FAILURE);
             }
-            if (!label.empty())
-            {
+            if (!label.empty()) {
                 inst.SetLabeled(label);
                 label.erase();
             }
             instructions_.push_back(std::move(inst));
         }
     }
-    
-    ConvertToByteCode();    
+
+    ConvertToByteCode();
 }
 
 void Assembler::ConvertToByteCode()
@@ -76,8 +77,7 @@ void Assembler::ConvertToByteCode()
     std::string output;
     size_t offset = 0;
 
-    for (const auto& inst : instructions_)
-    {
+    for (const auto& inst : instructions_) {
         offset = output.size();
 
         if (!inst.GetLabeled().empty())
@@ -86,10 +86,8 @@ void Assembler::ConvertToByteCode()
         output += inst.ConvertToByteCode(labels_, offset);
     }
 
-    for (const auto &inst : instructions_)
-    {     
-        if (inst.GetArgType() == LABEL)
-        {
+    for (const auto &inst : instructions_) {
+        if (inst.GetArgType() == LABEL) {
             OffsetLabel& offsetLabel = labels_.at(inst.GetLabel());
             int offset = offsetLabel.to - offsetLabel.froms.front();
             if (offset > 128 || offset < -128)
@@ -104,9 +102,9 @@ void Assembler::ConvertToByteCode()
     fclose(outputFile);
 }
 
-void Assembler::Dump() const 
+void Assembler::Dump() const
 {
-    std::cerr << "\n-------------------------------------------------------------------------\n";
+    std::cerr << "\n--------------------------------------------------------\n";
     std::cerr << "#[DUMP of Assembler]\n\n";
 
     std::cerr << "\n#[Parser_Begin]\n";
@@ -115,8 +113,7 @@ void Assembler::Dump() const
     std::cerr << "#[Parser_End]\n";
 
     std::cerr << "\n#[Labels_Begin]\n";
-    for (const auto& label : labels_)
-    {
+    for (const auto& label : labels_) {
         std::cerr << "\tLabel {" << label.first << "}\n"
                   << "\t\tTo: " << label.second.to << "\n"
                   << "\t\tFrom:\n";
@@ -125,5 +122,5 @@ void Assembler::Dump() const
     }
     std::cerr << "#[Labels_End]\n";
 
-    std::cerr << "\n-------------------------------------------------------------------------\n";
+    std::cerr << "\n--------------------------------------------------------\n";
 }

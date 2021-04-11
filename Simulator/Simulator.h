@@ -1,11 +1,17 @@
+#ifndef BINARY_TRANSLATOR_SIMULATOR_SIMULATOR_H
+#define BINARY_TRANSLATOR_SIMULATOR_SIMULATOR_H
+
+#include "Constants.h"
+
 #include <stack>
-#include <array>
 
 #include <iostream>
 
+namespace BinaryTranslator {
+
 class CpuSimulator {
 private:
-    int registers_[4] = {0};
+    int registers_[N_REGS] = {0};
     std::stack<int> stack_;
     std::stack<int> callerStack_;
     int isFlag = 0;
@@ -21,7 +27,7 @@ private:
 public:
     CpuSimulator() = default;
 
-    ~CpuSimulator() 
+    ~CpuSimulator()
     {
         delete[] bytecode_;
     }
@@ -29,4 +35,8 @@ public:
     void Run(char *const pathToInputFile);
 
     void Dump() const;
-};
+}; //class CpuSimulator
+
+}; //namespace BinaryTranslator
+
+#endif // BINARY_TRANSLATOR_SIMULATOR_SIMULATOR_H

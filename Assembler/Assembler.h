@@ -1,12 +1,13 @@
-#include <fstream>
-#include <vector>
+#ifndef BINARY_TRANSLATOR_ASSEMBLER_ASSEMBLER_H
+#define BINARY_TRANSLATOR_ASSEMBLER_ASSEMBLER_H
 
 #include "Instruction.h"
 
-using namespace CPU_Simulator;
+#include <vector>
 
-class Assembler 
-{
+namespace BinaryTranslator {
+
+class Assembler {
 private:
     std::string pathToInputFile_;
     std::string pathToOutputFile_;
@@ -18,12 +19,16 @@ private:
     void ReadFromFile();
     void ConvertToByteCode();
 
-public:    
-    Assembler(const char *pathToInputFile, const char *pathToOutputFile);
+public:
+    Assembler(const char* pathToInputFile, const char* pathToOutputFile);
 
     void Assemble();
 
     void Dump() const;
 
     ~Assembler();
-};
+}; // class Assembler
+
+}; // namespace BinaryTranslator
+
+#endif // BINARY_TRANSLATOR_ASSEMBLER_ASSEMBLER_H

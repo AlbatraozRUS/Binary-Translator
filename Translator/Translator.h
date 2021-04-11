@@ -4,6 +4,8 @@
 #include <experimental/propagate_const>
 #include <memory>
 
+namespace BinaryTranslator {
+
 class Translator {
 private:
     class Impl;
@@ -24,5 +26,6 @@ public:
     void Dump() const;
 };
 
+}; //namespace BinaryTranslator
 
 #endif //BINARY_TRANSLATOR_TRANSLATOR_H
