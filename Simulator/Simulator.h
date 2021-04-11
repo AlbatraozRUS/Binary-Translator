@@ -37,6 +37,6 @@ public:
     void Dump() const;
 }; //class CpuSimulator
 
-}; //namespace BinaryTranslator
+} //namespace BinaryTranslator
 
 #endif // BINARY_TRANSLATOR_SIMULATOR_SIMULATOR_H

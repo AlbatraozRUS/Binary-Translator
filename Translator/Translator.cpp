@@ -3,19 +3,22 @@
 
 #include "Constants.h"
 
-#include <iostream>
-#include <stack>
-
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Value.h"
 
+#include <iostream>
+#include <random>
+#include <stack>
+
 using namespace BinaryTranslator;
 
 namespace {
 
+const int MAX_RANDOM = 10;
+const int MIN_RANDOM = 0;
 
 bool IsRegRegInst(int inst)
 {
@@ -35,10 +38,23 @@ bool IsJumpInst(int inst)
         return true;
     return false;
 }
-} // namespace
+
+int GetRandomNumber(int min, int max)
+{
+    std::uniform_int_distribution<> UID{min, max};
+    static std::default_random_engine RE{};
+
+    return UID(RE);
+}
+
+} // anonymous namespace
 
 class Translator::Impl {
 private:
+    const size_t SIZE_ARRAY = 10;
+    const size_t SIZE_ARRAY_BENCHMARK = 10;
+
+
     std::string pathToInputFile_;
 
     unsigned char* bytecode_ = nullptr;
@@ -70,7 +86,7 @@ private:
     };
 
     GlobalArray array_ {
-        .size = 10,
+        .size = SIZE_ARRAY,
         .name = "array_",
     };
 
@@ -78,8 +94,6 @@ private:
         .size = N_INST + 1,
         .name = "nTacts",
     };
-
-    // TODO GlobalArray
 
     struct BranchBB {
         llvm::BasicBlock* trueBB  = nullptr;
@@ -91,6 +105,8 @@ private:
 
     std::map <size_t, BranchBB> branchBBs_;
     std::map <size_t, llvm::Function*> functions_;
+
+    bool isAnalyse_ = false;
 
     llvm::Function* CreateFunc();
     BranchBB CreateBranchBB(size_t truePC, size_t falsePC);
@@ -109,16 +125,19 @@ private:
     void TranslateByteCodeRet();
     void TranslateByteCodeExit();
 
-    llvm::Function *GetFunction(size_t PC) const;
-    llvm::BasicBlock* GetBB(size_t PC) const;
+    llvm::Function*   GetFunction(size_t PC) const;
+    llvm::BasicBlock* GetBB      (size_t PC) const;
     void MovePC();
 
-    int TranslateIDInst(int keyID);
-    void AddTact(int numInst);
+    void CountTact       (int idInst);
+    int  GetNumberIdInstr(int idInstr);
     void PrintBenchmarkResult();
 
 public:
-    Impl(char *const pathToInputFile) : pathToInputFile_(pathToInputFile) {}
+    Impl(char*  pathToInputFile, bool isAnalyse = false) :
+        pathToInputFile_(pathToInputFile),
+        isAnalyse_(isAnalyse)
+        {}
 
     ~Impl()
     {
@@ -126,13 +145,14 @@ public:
     }
 
     void Translate();
-    void Preprocess();
+    void PreTranslateBenchmark();
+    void PreTranslate();
 
     friend void Translator::Dump() const;
 
 }; // class Translator::Impl
 
-void Translator::Impl::Preprocess()
+void Translator::Impl::PreTranslate()
 {
     ReadBytecode();
 
@@ -165,12 +185,28 @@ void Translator::Impl::Preprocess()
 
     curFunc_ = mainFunc;
     PC_ = 0;
+
+    CreateGlobalArray(array_);
+}
+
+void Translator::Impl::PreTranslateBenchmark()
+{
+    if (!isAnalyse_)
+        false;
+
+    for (size_t i = 0; i < array_.size; i++) {
+        int number = GetRandomNumber(MIN_RANDOM, MAX_RANDOM);
+        llvm::Value* pArg_1 = builder_->CreateConstGEP2_32(array_.type,
+                                                           array_.array, 0, i);
+        llvm::Value* arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(),
+                                                  number);
+        builder_->CreateStore(arg_2, pArg_1);
+    }
 }
 
 void Translator::Impl::Translate()
 {
     CreateGlobalArray(regs_);
-    CreateGlobalArray(array_);
     CreateGlobalArray(benchmarkResult_);
     TranslateByteCode();
 }
@@ -189,7 +225,7 @@ void Translator::Impl::TranslateByteCode()
         if (tmpBB != nullptr)
             builder_->SetInsertPoint(tmpBB);
 
-        AddTact(bytecode_[PC_]);
+        CountTact(bytecode_[PC_]);
 
         switch (bytecode_[PC_]) {
         case ADD_R:
@@ -285,7 +321,8 @@ Translator::Impl::BranchBB Translator::Impl::CreateBranchBB(size_t truePC,
     llvm::BasicBlock* tmpTrueBB = GetBB(truePC);
     if (tmpTrueBB == nullptr)
         branchBB.trueBB =
-            llvm::BasicBlock::Create(context_, "trueBB" + std::to_string(numBB),
+            llvm::BasicBlock::Create(context_,
+                                     "trueBB" + std::to_string(numBB),
                                      curFunc_);
     else
         branchBB.trueBB = tmpTrueBB;
@@ -309,7 +346,6 @@ Translator::Impl::BranchBB Translator::Impl::CreateBranchBB(size_t truePC,
 
 void Translator::Impl::TranslateByteCodeExpression()
 {
-
     llvm::Value* pArg_1 = builder_->CreateConstGEP2_32(regs_.type, regs_.array,
                                                        0, bytecode_[PC_ + 1]);
     llvm::Value* arg_1 = builder_->CreateLoad(pArg_1);
@@ -388,7 +424,7 @@ void Translator::Impl::TranslateByteCodeExpression()
 
 void Translator::Impl::TranslateByteCodeJumps()
 {
-    AddTact(N_INST); //TODO Change arg to more beautiful
+    CountTact(N_INST); //TODO Change arg to more beautiful
     llvm::BasicBlock* trueBB = GetBB(PC_ + (char)bytecode_[PC_ + 1]);
     llvm::BasicBlock *falseBB = GetBB(PC_ + 2);
     if (bytecode_[PC_] == JMP)
@@ -538,7 +574,7 @@ void Translator::Impl::TranslateByteCodeStack()
 
 void Translator::Impl::TranslateByteCodeCall()
 {
-    AddTact(N_INST);
+    CountTact(N_INST);
     llvm::Function* function = GetFunction(PC_ + (char)bytecode_[PC_ + 1]);
     builder_->CreateCall(function);
 
@@ -558,8 +594,8 @@ void Translator::Impl::TranslateByteCodeExit()
     MovePC();
 }
 
-Translator::Translator(char *const pathToInputFile) :
-    pImpl_(std::make_unique<Impl>(pathToInputFile)){};
+Translator::Translator(char* pathToInputFile, bool isAnalyse) :
+    pImpl_(std::make_unique<Impl>(pathToInputFile)) {};
 
 Translator::~Translator() = default;
 
@@ -620,37 +656,45 @@ void Translator::Impl::MovePC()
     #undef INSTRUCTION
 }
 
-int Translator::Impl::TranslateIDInst(int keyID)
+void Translator::Impl::CountTact(int idInst)
+{
+    if (!isAnalyse_)
+        return;
+
+    llvm::Value *pArg_1 =
+            builder_->CreateConstGEP2_32(benchmarkResult_.type,
+                                         benchmarkResult_.array,
+                                         0, GetNumberIdInstr(idInst));
+    llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
+    llvm::Value *arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), 1);
+    builder_->CreateStore(builder_->CreateAdd(arg_1, arg_2), pArg_1);
+}
+
+int Translator::Impl::GetNumberIdInstr(int idInstr)
 {
     #define INSTRUCTION(name, id, argType, num, size, code)  \
         case id: return num;                                 \
 
     #define INSTRUCTIONS
-    switch (keyID) {
+    switch (idInstr) {
     #include "Commands_DSL.txt"
 
     case N_INST: return N_INST;
     default:
-        throw std::runtime_error("TranslateIDInst():"
+        throw std::runtime_error("GetNumberIdInstr():"
                                  "Unidefined instruction " +
-                                 std::to_string(keyID));
+                                 std::to_string(idInstr));
     }
 
     #undef INSTRUCTIONS
     #undef INSTRUCTION
 }
 
-void Translator::Impl::AddTact(int numInst)
-{
-    llvm::Value *pArg_1 = builder_->CreateConstGEP2_32(benchmarkResult_.type, benchmarkResult_.array,
-                                                       0, TranslateIDInst(numInst));
-    llvm::Value *arg_1 = builder_->CreateLoad(pArg_1);
-    llvm::Value *arg_2 = llvm::ConstantInt::get(builder_->getInt32Ty(), 1);
-    builder_->CreateStore(builder_->CreateAdd(arg_1, arg_2), pArg_1);
-}
-
 void Translator::Impl::PrintBenchmarkResult()
 {
+    if (!isAnalyse_)
+        return;
+
     std::vector<llvm::Type *> funcArgsTypes;
     funcArgsTypes.push_back(builder_->getInt8PtrTy());
     llvm::FunctionType *funcType =
@@ -680,10 +724,10 @@ void Translator::Impl::PrintBenchmarkResult()
 
     std::vector<llvm::Value *> args;
     args.push_back(formatStrVal);
-    for (size_t numInst = 0; numInst < N_INST + 1; numInst++) {
+    for (size_t iNumInst = 0; iNumInst < N_INST + 1; iNumInst++) {
         llvm::Value *pArg = builder_->CreateConstGEP2_32(benchmarkResult_.type,
                                                          benchmarkResult_.array, 0,
-                                                         numInst);
+                                                         iNumInst);
         llvm::Value *arg = builder_->CreateLoad(pArg);
         args.push_back(arg);
     }
@@ -714,7 +758,7 @@ llvm::Function* Translator::Impl::GetFunction(size_t PC) const
 
 void Translator::Translate()
 {
-    pImpl_->Preprocess();
+    pImpl_->PreTranslate();
     pImpl_->Translate();
 }
 

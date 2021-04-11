@@ -8,10 +8,10 @@
 
 using namespace BinaryTranslator;
 
-Assembler::Assembler(const char *pathToInputFile,
-                     const char *pathToOutputFile) :
+Assembler::Assembler(const char* pathToInputFile,
+                     const char* pathToOutputFile) :
     pathToInputFile_(pathToInputFile),
-          pathToOutputFile_(pathToOutputFile)
+    pathToOutputFile_(pathToOutputFile)
 {}
 
 Assembler::~Assembler() = default;

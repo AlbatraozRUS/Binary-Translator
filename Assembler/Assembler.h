@@ -29,6 +29,6 @@ public:
     ~Assembler();
 }; // class Assembler
 
-}; // namespace BinaryTranslator
+} // namespace BinaryTranslator
 
 #endif // BINARY_TRANSLATOR_ASSEMBLER_ASSEMBLER_H

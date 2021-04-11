@@ -43,6 +43,6 @@ public:
 
 }; //class Instruction
 
-}; //namespace BinaryTranslator
+} //namespace BinaryTranslator
 
 #endif // BINARY_TRANSLATOR_ASSEMBLER_INSTRUCTION_H

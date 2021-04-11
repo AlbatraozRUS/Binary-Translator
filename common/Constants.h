@@ -93,6 +93,6 @@ enum Argtypes {
     REG_NUMBER,
 };
 
-}; //namespace BinaryTranslator
+} //namespace BinaryTranslator
 
 #endif // BINARY_TRANSLATOR_COMMON_CONSTANTS_H_

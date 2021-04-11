@@ -13,7 +13,7 @@ private:
 
 public:
 
-    Translator(char *const pathToInputFile);
+    Translator(char* pathToInputFile, bool isAnalyse = false);
 
     Translator(const Translator &) = delete;
     Translator &operator=(const Translator &) = delete;
@@ -26,6 +26,6 @@ public:
     void Dump() const;
 };
 
-}; //namespace BinaryTranslator
+} //namespace BinaryTranslator
 
 #endif //BINARY_TRANSLATOR_TRANSLATOR_H
