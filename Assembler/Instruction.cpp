@@ -9,10 +9,10 @@ using namespace BinaryTranslator;
 
 namespace {
 
-const std::map<int, std::string> kRegisterList = { {RAX, "rax"},
-                                                   {RBX, "rbx"},
-                                                   {RCX, "rcx"},
-                                                   {RDX, "rdx"} };
+const std::map<int, std::string> kRegisterList = { {EAX, "rax"},
+                                                   {EBX, "rbx"},
+                                                   {ECX, "rcx"},
+                                                   {EDX, "rdx"} };
 
 int WhichReg(const std::string& instructionText, bool isFirstArg = true)
 {

@@ -173,7 +173,7 @@ INSTRUCTION(write_p, WRITE_P, 3, NUM_WRITE_P, 2,
     std::cout << *(int*)registers_[bytecode_[PC + 1]] << "\n";
     PC += 2;)
 
-INSTRUCTION(read, READ_P, 3, NUM_READ_P, 2,
+INSTRUCTION(read_p, READ_P, 3, NUM_READ_P, 2,
      std::cin >> *(int*)registers_[bytecode_[PC + 1]];
      PC += 2;)
 

@@ -90,10 +90,10 @@ enum IdInstructions {
 };
 
 enum Registers {
-    RAX,
-    RBX,
-    RCX,
-    RDX,
+    EAX,
+    EBX,
+    ECX,
+    EDX,
     N_REGS,
 };
 

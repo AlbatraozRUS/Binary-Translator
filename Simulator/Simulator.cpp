@@ -53,6 +53,6 @@ void CpuSimulator::Dump() const
     fprintf(stderr, "ID: %x, PC: %zu\n\t Arg_1: %x, Arg_2: %x\n",
         bytecode_[PC], PC, bytecode_[PC + 1], bytecode_[PC + 2]);
 
-    fprintf(stderr, "Registers: RAX - %d, RBX - %d, RCX - %d, RDX - %d\n\n",
-        registers_[RAX], registers_[RBX], registers_[RCX], registers_[RDX]);
+    fprintf(stderr, "Registers: EAX - %d, EBX - %d, ECX - %d, EDX - %d\n\n",
+        registers_[EAX], registers_[EBX], registers_[ECX], registers_[EDX]);
 }

@@ -230,7 +230,7 @@ void Translator::Impl::PreTranslate()
 void Translator::Impl::PreTranslateBenchmark()
 {
     if (!isAnalyse_)
-        false;
+        return;
 
     for (size_t i = 0; i < SIZE_MEMORY_BENCHMARK; i++) {
         // int number = GetRandomNumber(MIN_RANDOM, MAX_RANDOM);
@@ -560,16 +560,16 @@ void Translator::Impl::TranslateByteCodeIO()
 
     std::string regStr;
     switch (bytecode_[PC_ + 1]) {
-    case RAX:
-        regStr += "RAX: = ";
+    case EAX:
+        regStr += "EAX: = ";
         break;
-    case RBX:
-        regStr += "RBX: = ";
+    case EBX:
+        regStr += "EBX: = ";
         break;
-    case RCX:
-        regStr += "RCX: = ";
+    case ECX:
+        regStr += "ECX: = ";
         break;
-    case RDX:
+    case EDX:
         regStr += "RDX: = ";
         break;
 
