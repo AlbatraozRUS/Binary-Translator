@@ -1,26 +1,45 @@
 mov rdx, 1
+jmp pass_sort
+
 :pass_sort
 cmp rdx, 1
 jne end_sort
-mov_r rdx, 0
+mov rdx, 0
 pop_r rax
 pop_r rcx
 push_r rcx
 push_r rax
+jmp next
+
 :next
 pop_r rax
-cmp rcx, rax
 push_r rax
+cmp_r rcx, rax
 je pass_sort
+
 mov_rp rax, rcx
-add rcx, 1
+inc rcx
 mov_rp rbx, rcx
-cmp rax, rbx
-jl next
-sub rcx, 1
+cmp_r rax, rbx
+jle next
+
+dec rcx
 mov_pr rcx, rbx
-add rcx, 1
+inc rcx
 mov_pr rcx, rax
 mov rdx, 1
 jmp next
+
 :end_sort
+
+pop_r rcx
+pop_r rax
+jmp print
+:print
+mov_rp rbx, rax
+inc rax
+write rbx
+cmp_r rax, rcx
+jne print
+
+exit

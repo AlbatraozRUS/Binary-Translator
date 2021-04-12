@@ -31,8 +31,9 @@ int main(int argc, char** argv)
     //     exit(EXIT_FAILURE);
     // }
 
+
     try {
-        BinaryTranslator::Translator translator(argv[2]);
+        BinaryTranslator::Translator translator(argv[2], true);
         translator.Translate();
         translator.Dump();
     }

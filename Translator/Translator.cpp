@@ -51,8 +51,8 @@ int GetRandomNumber(int min, int max)
 
 class Translator::Impl {
 private:
-    const size_t SIZE_ARRAY = 10;
-    const size_t SIZE_ARRAY_BENCHMARK = 10;
+    const size_t SIZE_ARRAY = 10000;
+    const size_t SIZE_ARRAY_BENCHMARK = SIZE_ARRAY;
 
 
     std::string pathToInputFile_;
@@ -202,6 +202,14 @@ void Translator::Impl::PreTranslateBenchmark()
                                                   number);
         builder_->CreateStore(arg_2, pArg_1);
     }
+
+    llvm::Value* startArrayBenchmark =
+        llvm::ConstantInt::get(builder_->getInt32Ty(), 0);
+    llvm::Value* endArrayBenchmark =
+        llvm::ConstantInt::get(builder_->getInt32Ty(), SIZE_ARRAY_BENCHMARK);
+
+    stackIR_.push(startArrayBenchmark);
+    stackIR_.push(endArrayBenchmark);
 }
 
 void Translator::Impl::Translate()
@@ -364,17 +372,21 @@ void Translator::Impl::TranslateByteCodeExpression()
     llvm::Value* res = nullptr;
     switch (bytecode_[PC_]) {
     case MOV_RP: {
-        llvm::Value* pArg_2 = builder_->CreateGEP(array_.type, array_.array,
-                                                arg_2, array_.name);
+        llvm::Value* tmp = llvm::ConstantInt::get(builder_->getInt32Ty(), 0);
+        llvm::ArrayRef<llvm::Value*> list = {tmp, arg_2};
+        llvm::Value* pArg_2 = builder_->CreateGEP(array_.type, array_.array, list);
+
         res = builder_->CreateLoad(pArg_2);
         break;
     }
-    case MOV_PR:
-        pArg_1 = builder_->CreateGEP(array_.type, array_.array,
-                                     arg_1, array_.name);
+    case MOV_PR: {
+        llvm::Value* tmp = llvm::ConstantInt::get(builder_->getInt32Ty(), 0);
+        llvm::ArrayRef<llvm::Value*> list = {tmp, arg_1};
+        pArg_1 = builder_->CreateGEP(array_.type, array_.array, list);
         // Load?
         res = arg_2;
         break;
+    }
 
     case ADD:
     case ADD_R:
@@ -541,6 +553,7 @@ void Translator::Impl::TranslateByteCodeStack()
     llvm::Value* pArg = nullptr;
     llvm::Value* arg = nullptr;
 
+
     switch (bytecode_[PC_]) {
     case PUSH:
         arg = llvm::ConstantInt::get(builder_->getInt32Ty(),
@@ -595,7 +608,7 @@ void Translator::Impl::TranslateByteCodeExit()
 }
 
 Translator::Translator(char* pathToInputFile, bool isAnalyse) :
-    pImpl_(std::make_unique<Impl>(pathToInputFile)) {};
+    pImpl_(std::make_unique<Impl>(pathToInputFile, isAnalyse)) {};
 
 Translator::~Translator() = default;
 
@@ -759,6 +772,7 @@ llvm::Function* Translator::Impl::GetFunction(size_t PC) const
 void Translator::Translate()
 {
     pImpl_->PreTranslate();
+    pImpl_->PreTranslateBenchmark();
     pImpl_->Translate();
 }
 

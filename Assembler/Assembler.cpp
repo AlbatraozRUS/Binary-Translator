@@ -32,7 +32,6 @@ void Assembler::ReadFromFile()
         if (!instructionText[0])
             continue;
 
-        std::cerr << instructionText << "\n";
         instructionsText_.push_back(instructionText);
     }
 
