@@ -95,25 +95,25 @@ void Instruction::Impl::ParseArguments(const std::string& instructionText)
 
 void Instruction::ParseInstruction(const std::string& instructionText)
 {
-#define INSTRUCTION(name, id, argtype, num, size, code) {       \
-        if (instructionText.find(#name) != std::string::npos) { \
-            pImpl_->Id_ = id;                                   \
-            pImpl_->argType_ = argtype;                         \
-        }                                                       \
-    }
+    #define INSTRUCTION(name, id, argtype, num, size, code) {       \
+            if (instructionText.find(#name) != std::string::npos) { \
+                pImpl_->Id_ = id;                                   \
+                pImpl_->argType_ = argtype;                         \
+            }                                                       \
+        }
 
-#define INSTRUCTIONS
-#include "Commands_DSL.txt"
+    #define INSTRUCTIONS
+    #include "Commands_DSL.txt"
 
-#undef INSTRUCTIONS
+    #undef INSTRUCTIONS
 
-    if (pImpl_->Id_ == -1)
-        throw std::runtime_error("Assembler: Unidentified instruction" +
-                                 instructionText);
+        if (pImpl_->Id_ == -1)
+            throw std::runtime_error("Assembler: Unidentified instruction" +
+                                    instructionText);
 
-    pImpl_->ParseArguments(instructionText);
+        pImpl_->ParseArguments(instructionText);
 
-#undef INSTRUCTION
+    #undef INSTRUCTION
 }
 
 

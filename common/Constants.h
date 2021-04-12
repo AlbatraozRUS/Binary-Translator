@@ -37,6 +37,13 @@ enum NumInstructions {
     NUM_JLE,
     NUM_JE,
     NUM_JNE,
+
+    NUM_MOV_PP,
+    NUM_CMP_RP,
+    NUM_CMP_PP,
+    NUM_WRITE_P,
+    NUM_READ_P,
+
     N_INST,
 };
 
@@ -74,6 +81,12 @@ enum IdInstructions {
     JLE = 0x8E,
     JE = 0x75,
     JNE = 0x85,
+
+    MOV_PP = 0xBE,
+    CMP_RP = 0x3C,
+    CMP_PP = 0x3D,
+    WRITE_P = 0xE7,
+    READ_P  = 0xE5,
 };
 
 enum Registers {

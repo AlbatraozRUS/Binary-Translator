@@ -155,4 +155,26 @@ INSTRUCTION(jne, JNE, 1, NUM_JNE, 2,
     else
         PC += 2;)
 
+INSTRUCTION(mov_pp, MOV_PP, 4, NUM_MOV_PP, 3,
+    *(int*)registers_[bytecode_[PC + 1]] = *(int*)registers_[bytecode_[PC + 2]];
+    PC += 3;)
+
+INSTRUCTION(cmp_rp, CMP_RP, 4, NUM_CMP_RP, 3,
+    isFlag = registers_[bytecode_[PC + 1]] -
+                                    *(int*)registers_[bytecode_[PC + 2]];
+    PC += 3;)
+
+INSTRUCTION(cmp_pp, CMP_PP, 4, NUM_CMP_PP, 3,
+    isFlag = *(int*)registers_[bytecode_[PC + 1]] -
+                                    *(int*)registers_[bytecode_[PC + 2]];
+    PC += 3;)
+
+INSTRUCTION(write_p, WRITE_P, 3, NUM_WRITE_P, 2,
+    std::cout << *(int*)registers_[bytecode_[PC + 1]] << "\n";
+    PC += 2;)
+
+INSTRUCTION(read, READ_P, 3, NUM_READ_P, 2,
+     std::cin >> *(int*)registers_[bytecode_[PC + 1]];
+     PC += 2;)
+
 #endif

@@ -17,15 +17,13 @@ push_r rax
 cmp_r rcx, rax
 je pass_sort
 
-mov_rp rax, rcx
+mov_r rbx, rcx
 inc rcx
-mov_rp rbx, rcx
-cmp_r rax, rbx
+cmp_pp rbx, rcx
 jle next
 
-dec rcx
-mov_pr rcx, rbx
-inc rcx
+mov_rp rax, rbx
+mov_pp rbx, rcx
 mov_pr rcx, rax
 mov rdx, 1
 jmp next
@@ -36,8 +34,7 @@ pop_r rcx
 pop_r rax
 jmp print
 :print
-mov_rp rbx, rax
-write rbx
+write_p rax
 inc rax
 cmp_r rax, rcx
 jne print
